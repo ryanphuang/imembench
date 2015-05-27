@@ -1,0 +1,17 @@
+python-docs: $(OBJDIR)/libramcloud.so
+	LD_LIBRARY_PATH=$(OBJDIR):$$LD_LIBRARY_PATH $(EPYDOC) --html -n RAMCloud -o docs/epydoc/ $(EPYDOCFLAGS) bindings/python/*.py
+
+python-docs-clean:
+	rm -rf docs/epydoc/
+
+python-test: $(OBJDIR)/libramcloud.so
+	@ failed=0; \
+	for test in bindings/python/test*.py; do \
+		if [ -x $$test ]; then \
+			echo "Running $$test:"; \
+			LD_LIBRARY_PATH=$(OBJDIR):$$LD_LIBRARY_PATH \
+				$(PYTHON) $$test -q || failed=1; \
+			echo; \
+		fi \
+	done; \
+	exit $$failed
