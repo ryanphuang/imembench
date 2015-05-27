@@ -19,8 +19,20 @@ the form of either the source language or bindings.
   * `increment(tableId, key, keyLength, incrementValue, ...)`
   * `remove(tableId, key, keyLength, ...)`
 
-- Tachyon:
-
+- Tachyon (http://tachyon-project.org/api/java/index.html):
+  * `int read()` 
+  * `int read(byte[] b)`
+  * `int read(byte[] b, int off, int len)`  
+  * `void seek(long pos)`
+  * `skip(long n)`
+  *
+  * `write(byte[] b)` 
+  * `write(byte[] b, int off, int len)` 
+  * `write(int b)` 
+  * `flush()`
+  *
+  * `mkdir(TachyonURI path)`
+  * `rename(TachyonURI srcPath, TachyonURI dstPath)` 
 - Redis:
 
 ## existing languages:
