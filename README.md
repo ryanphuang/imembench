@@ -1,13 +1,13 @@
 # imembench
-Various in-memory storage systems exist today that offer similar functionality but
-with different features (some more performant, others more reliable). Each of the 
-systems usually has its own APIs, making the benchmark results of them often 
-incomparable. The goal of *imembench* is to extract and create a common wrapper of the
-interfaces exposed by these systems, and then drive these systems with almost-the-same 
-workloads by exercising this common interface. 
+Various in-memory storage systems exist today that offer similar functionality
+but with different features (some more performant, others more reliable). Each
+of the systems usually has its own APIs, making the benchmark results of them
+often incomparable. The goal of *imembench* is to extract and create a common
+wrapper of the interfaces exposed by these systems, and then drive these systems
+with almost-the-same workloads by exercising this common interface. 
 
-Implementation-wise, we need to use a common language that can talk to these systems in 
-the form of either the source language or bindings. 
+Implementation-wise, we need to use a common language that can talk to these
+systems in the form of either the source language or bindings. 
 
 ## existing interfaces:
 - RAMCloud:
@@ -34,6 +34,7 @@ the form of either the source language or bindings.
   * `mkdir(TachyonURI path)`
   * `rename(TachyonURI srcPath, TachyonURI dstPath)` 
 - Redis:
+  * http://redis.io/commands
 
 ## existing languages:
 - RAMCloud:
@@ -46,4 +47,7 @@ the form of either the source language or bindings.
 
 - Redis:
   * Source: C/C++
-  * Bindings: TBA
+  * Bindings: C, C#, C++, Clojure, Common List, D, Dart, Elixir, emacs lisp,
+    Erlang, Fancy, GNU Prolog, Go, Haskell, haXe, Io, Java, Lua, Matlab, Nimrod,
+    Node.js, Objective-C, OCaml, Perl, PHP, Pure Data, Python, Rebol, Ruby,
+    Rust, Scala, Scheme, Smalltalk, Tcl, VCL. (http://redis.io/clients)
