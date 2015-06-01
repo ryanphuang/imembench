@@ -9,6 +9,13 @@ with almost-the-same workloads by exercising this common interface.
 Implementation-wise, we need to use a common language that can talk to these
 systems in the form of either the source language or bindings. 
 
+## checkout repository:
+after clone the main repository, run `git submodule update --init --recursive` to
+pull the git submodules for building.
+
+## build instruction:
+TBA
+
 ## existing interfaces:
 - RAMCloud:
   * `createTable(name)`
