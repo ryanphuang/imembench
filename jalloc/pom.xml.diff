@@ -1,0 +1,16 @@
+--- core/pom.xml	2015-04-24 15:23:49.000000000 -0700
++++ /home/tianyin/tachyon-0.6.4-test/tachyon-0.6.4/core/pom.xml	2015-05-30 23:53:18.030265733 -0700
+@@ -16,6 +16,13 @@
+     <findbugs.path>${project.parent.basedir}/build/findbugs/</findbugs.path>
+   </properties>
+   <dependencies>
++    
++    <dependency>
++        <groupId>com.google.code.java-allocation-instrumenter</groupId>
++        <artifactId>java-allocation-instrumenter</artifactId>
++        <version>3.0</version>
++    </dependency>
++
+     <dependency>
+       <!-- using older version to map dependency version from Hadoop -->
+       <groupId>com.google.guava</groupId>

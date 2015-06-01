@@ -1,0 +1,26 @@
+--- core/src/main/java/tachyon/worker/TachyonWorker.java	2015-04-24 15:23:49.000000000 -0700
++++ /home/tianyin/tachyon-0.6.4-test/tachyon-0.6.4/core/src/main/java/tachyon/worker/TachyonWorker.java	2015-05-31 19:37:49.167599994 -0700
+@@ -29,6 +29,8 @@
+ import org.slf4j.LoggerFactory;
+ 
+ import com.google.common.base.Throwables;
++import com.google.monitoring.runtime.instrumentation.AllocationRecorder;
++import com.google.monitoring.runtime.instrumentation.Sampler;
+ 
+ import tachyon.Constants;
+ import tachyon.UnderFileSystem;
+@@ -127,6 +129,14 @@
+           TachyonWorker.createWorker(getMasterLocation(args), resolvedWorkerHost + ":" + wConf.PORT,
+               wConf.DATA_PORT, wConf.SELECTOR_THREADS, wConf.QUEUE_SIZE_PER_SELECTOR,
+               wConf.SERVER_THREADS);
++      
++      //Instrument the memory allocation
++      AllocationRecorder.addSampler(new Sampler() {
++        public void sampleAllocation(int count, String desc, Object newObj, long size) {
++          LOG.info(count + " " + desc + " " + newObj + " " + size);
++        }
++      });
++
+       worker.start();
+     } catch (Exception e) {
+       LOG.error("Uncaught exception terminating worker", e);
