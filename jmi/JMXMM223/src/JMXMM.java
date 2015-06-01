@@ -38,12 +38,13 @@ public class JMXMM {
   }
   
   public static void getContinousMemoryUsages(JMXServiceURL url, long period) {
+    System.out.println("INIT USED COMMITTED MAX");
     while(true) {
       try {
         JMXConnector jmxc = JMXConnectorFactory.connect(url, null);
         Object o = jmxc.getMBeanServerConnection().getAttribute(new ObjectName("java.lang:type=Memory"), "HeapMemoryUsage");
         CompositeData cd = (CompositeData) o;
-        System.out.println(cd.get("committed") + " " + cd.get("used") + " " + cd.get("init") + " " + cd.get("max"));
+        System.out.println(cd.get("init") + " " + cd.get("used") + " " + cd.get("committed") + " " + cd.get("max"));
         
         Thread.sleep(period);
         
@@ -86,9 +87,6 @@ public class JMXMM {
       System.err.println("[ERROR] port (-p) should be an positive integer int the range of [1, 65535]");
       return;
     }
-    
-    System.out.println(options.port);
-    System.out.println(options.period);
     
     JMXMM jmxmm = new JMXMM(options.port, options.period*1000);
     jmxmm.run();
