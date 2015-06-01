@@ -1,3 +1,6 @@
 [submodule "bindings/tachyon/c++"]
 	path = bindings/tachyon/c++
 	url = git@github.com:stormspirit/libtachyon.git
+[submodule "bindings/ramcloud/c++"]
+	path = bindings/ramcloud/c++
+	url = git@github.com:stormspirit/RAMCloud.git
