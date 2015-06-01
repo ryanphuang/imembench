@@ -1,0 +1,3 @@
+[submodule "bindings/tachyon/c++"]
+	path = bindings/tachyon/c++
+	url = git@github.com:stormspirit/libtachyon.git
