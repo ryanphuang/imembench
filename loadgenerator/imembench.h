@@ -6,9 +6,17 @@
 #include <string>
 #include <sstream>
 
-#include <hiredis.h>
-#include <RamCloud.h>
-#include <Tachyon.h>
+// some forward declarations
+namespace RAMCloud {
+  class RamCloud;
+  class Buffer;
+}
+namespace tachyon {
+  class TachyonClient;
+}
+class redisContext;
+//////////////////////////////
+
 
 class ConnectionConfig {
   public:
@@ -69,6 +77,7 @@ class BenchDriverBase {
 
 class RamCloudDriver : BenchDriverBase {
   public:
+    RamCloudDriver();
     ~RamCloudDriver();
 
     bool init(ConnectionConfig *config);
@@ -78,8 +87,8 @@ class RamCloudDriver : BenchDriverBase {
 
   protected:
     RAMCloud::RamCloud *m_client;
+    RAMCloud::Buffer *m_buffer;
     uint64_t m_test_table_id;
-    RAMCloud::Buffer m_buffer;
 };
 
 class TachyonDriver : BenchDriverBase {

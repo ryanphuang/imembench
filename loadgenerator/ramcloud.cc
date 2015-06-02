@@ -1,9 +1,15 @@
-#include "imembench.h"
-
+#include <RamCloud.h>
 #include <string.h>
 #include <stdio.h>
 
+#include "imembench.h"
+
 using namespace RAMCloud;
+
+RamCloudDriver::RamCloudDriver()
+{
+  m_buffer = new Buffer();
+}
 
 RamCloudDriver::~RamCloudDriver()
 {
@@ -12,6 +18,11 @@ RamCloudDriver::~RamCloudDriver()
     m_client->dropTable(testTableName);
     printf("test table '%s' dropped\n", testTableName);
   }
+  // TODO: WTF, we can't destroy the client!!
+  // if (m_client != NULL)
+  //  delete m_client;
+  if (m_buffer != NULL)
+    delete m_buffer;
 }
 
 bool RamCloudDriver::init(ConnectionConfig *config) 
@@ -52,9 +63,9 @@ inline void RamCloudDriver::write(const char *key, const char *value, uint32_t l
 
 inline void RamCloudDriver::read(const char *key, char *buf, uint32_t len)
 {
-  uint32_t sz  = m_buffer.size();
+  uint32_t sz  = m_buffer->size();
   m_client->read(m_test_table_id, key, downCast<uint16_t>(strlen(key)), 
-                    &m_buffer);
-  strncpy(buf, static_cast<const char *>(m_buffer.getRange(0, sz)), len);
+                    m_buffer);
+  strncpy(buf, static_cast<const char *>(m_buffer->getRange(0, sz)), len);
 }
 

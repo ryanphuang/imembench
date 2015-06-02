@@ -36,12 +36,13 @@ CC ?= gcc
 CXX ?= g++
 AR ?= ar
 
+TARGET := imembench
+OBJS := main.o
+
 include Ramcloud.mk
 include Tachyon.mk
 include Redis.mk
 
-TARGET := imembench
-OBJS := imembench.o main.o
 DEPS := $(OBJS:.o=.d)
 
 all: $(TARGET)

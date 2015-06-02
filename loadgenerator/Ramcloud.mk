@@ -7,3 +7,5 @@ LDFLAGS += $(OBJDIR)/ramcloud/OptionParser.o \
 ifeq ($(VALGRIND),yes)
 CXXFLAGS += -DVALGRIND
 endif
+
+OBJS += ramcloud.o
