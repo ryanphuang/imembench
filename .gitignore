@@ -1,8 +1,11 @@
 hiredis-test
-examples/hiredis-example*
+bindings/redis/c/examples/hiredis-example*
 *.o
 *.so
 *.dylib
 *.a
+*.d
 *.pc
 *.swp
+rcclient
+/loadgenerator/imbench
