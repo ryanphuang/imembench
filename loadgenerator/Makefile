@@ -29,7 +29,7 @@ CXXWARNS := $(COMWARNS) -Wno-non-template-friend -Woverloaded-virtual \
 
 INCLUDES :=
 
-CXXFLAGS := $(COMFLAGS) -Werror $(CXXWARNS)
+CXXFLAGS := $(COMFLAGS) $(CXXWARNS)
 LDFLAGS := -L$(LIBDIR)
 
 CC ?= gcc

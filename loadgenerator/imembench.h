@@ -4,6 +4,9 @@
 #include <cstdlib>
 #include <string>
 #include <sstream>
+#include <vector>
+#include <map>
+#include <utility>
 
 #include "config.h"
 
@@ -32,7 +35,6 @@ class BenchDriverBase {
 
     virtual void write(const char *key, const char *value, uint32_t len) = 0;
     virtual int read(const char *key, char *buff, uint32_t len) = 0;
-    virtual void *getClient() = 0;
 
   protected:
     bool m_initialized;
@@ -81,10 +83,10 @@ class RedisDriver : BenchDriverBase {
 
     void write(const char *key, const char *value, uint32_t len);
     int read(const char *key, char *buff, uint32_t len);
-    void *getClient() { return m_client; }
+    void getClients(std::vector<void *> &clients);  
 
   protected:
-    redisContext *m_client;
+    std::map<std::pair<const char *, int>, redisContext *> m_clients;
 };
 
 #endif /* __IMEMBENCH_H_ */

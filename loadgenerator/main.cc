@@ -208,7 +208,14 @@ void setupRedisDriver()
     timeout = 1.5;
   }
   
-  ConnectionConfig * rdconf = new ConnectionConfig(cluster, port);
+  ConnectionConfig * rdconf = new ConnectionConfig("", port); // use cluster instead of host
+  (*rdconf).setCluster(cluster).setTimeout(timeout);
+
+  HostList hosts = rdconf->getCluster();
+  HostList::iterator hit;
+  for (hit = hosts.begin(); hit != hosts.end(); ++hit) {
+    printf("%s\n", hit->c_str());
+  }
   ok = gRedDriver.init(rdconf);
   if (!ok) {
     printf("fail to initialize redis driver\n");
