@@ -57,11 +57,15 @@ inline void TachyonDriver::write(const char *key, const char *value, uint32_t le
   string s1(kvprefix);
   s1.append(key);
   jTachyonFile jfile = m_client->getFile(s1.c_str());
-  if (jfile == NULL) {
-    int fid = m_client->createFile(s1.c_str());
-    if (fid > 0)
-      jfile = m_client->getFile(fid);
+  if (jfile != NULL) {
+    delete jfile;
+    if (!m_client->deletePath(s1.c_str(), false)) {
+      return;
+    }
   }
+  int fid = m_client->createFile(s1.c_str());
+  if (fid > 0)
+    jfile = m_client->getFile(fid);
   if (jfile != NULL) {
     jOutStream ostream = jfile->getOutStream(MUST_CACHE);
     if (ostream != NULL) {
@@ -85,6 +89,7 @@ inline int TachyonDriver::read(const char *key, char *buff, uint32_t len)
   jInStream istream = jfile->getInStream(CACHE);
   if (istream != NULL) {
     sz = istream->read(buff, len);
+    istream->close();
     delete istream;
   }
   delete jfile;
