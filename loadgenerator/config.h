@@ -11,6 +11,7 @@ typedef std::map<std::string, BenchConfigMap> BenchConfigMaps;
 typedef std::vector<std::string> BenchConfigKeys;
 typedef std::vector<std::pair<std::string, std::string>> BenchConfigSectionKeys;
 typedef std::vector<std::string> BenchConfigSections;
+typedef std::vector<std::string> HostList;
 
 class BenchConfigParser {
   public:
@@ -34,9 +35,53 @@ class BenchConfigParser {
 
 class ConnectionConfig {
   public:
-     ConnectionConfig(const char *host, int port, const char *transport = NULL, 
-          const char *clusterName = NULL, const char *testTableName = NULL, 
-          const char *kvStorePrefix = NULL, double timeout = 1.5);
+    ConnectionConfig(const char *host, int port) : 
+        m_host(host), m_port(port) {}
+
+    inline ConnectionConfig& setHost(const char *host) 
+    {
+      if (host != NULL) {
+        m_host.assign(host);
+        rebuildLocator();
+      }
+      return *this;
+    }
+
+    inline ConnectionConfig& setPort(int port)
+    {
+      m_port = port;
+      rebuildLocator();
+      return *this;
+    }
+
+    inline ConnectionConfig& setTransport(const char *transport)
+    {
+      if (transport != NULL) {
+        m_transport.assign(transport);
+        rebuildLocator();
+      }
+      return *this;
+    }
+
+    ConnectionConfig& setCluster(const char *cluster);
+    inline ConnectionConfig& setClusterName(const char *clusterName)
+    {
+      if (clusterName != NULL)
+        m_cluster_name.assign(clusterName);
+      return *this;
+    }
+    inline ConnectionConfig& setTestTable(const char *testTableName)
+    {
+      if (testTableName != NULL)
+        m_test_table.assign(testTableName); 
+      return *this;
+    }
+    ConnectionConfig& setKVStore(const char *kvStorePrefix);
+    inline ConnectionConfig& setTimeout(double timeout)
+    {
+      m_timeout = timeout;
+      return *this;
+    }
 
     const char *getHost() { return m_host.c_str(); }
     int getPort() { return m_port; }
@@ -46,6 +91,9 @@ class ConnectionConfig {
     const char *getTestTableName() { return m_test_table.c_str(); }
     const char *getKVStorePrefix() { return m_kvstore_prefix.c_str(); }
     double getTimeout() { return m_timeout; }
+    HostList & getCluster() { return m_cluster; }
+
+    void rebuildLocator();
 
   private:
     std::string m_host;
@@ -59,6 +107,7 @@ class ConnectionConfig {
     std::string m_kvstore_prefix; // for tachyon
 
     double m_timeout; // for redis
+    HostList m_cluster; // for redis
 };
 
 

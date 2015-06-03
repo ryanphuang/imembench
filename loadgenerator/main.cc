@@ -99,8 +99,13 @@ void setupRamCloudDriver()
   testTable = getConfig(rc_configs, "ramcloud", "test_table", true);
   if (testTable == NULL)
     testTable = "test";
-  ConnectionConfig * rcconf = new ConnectionConfig(host, port, transport, 
-      clusterName, testTable);
+
+  ConnectionConfig * rcconf = new ConnectionConfig(host, port);
+
+  (*rcconf).setTransport(transport)
+           .setClusterName(clusterName)
+           .setTestTable(testTable);
+
   ok = gRamDriver.init(rcconf);
   if (!ok) {
     printf("fail to initialize ramcloud driver\n");
@@ -143,8 +148,9 @@ void setupTachyonDriver()
   }
   kvstorePrefix = getConfig(tc_configs, "tachyon", "kv_store_prefix");
 
-  ConnectionConfig * tcconf = new ConnectionConfig(host, port, NULL, NULL, 
-      NULL, kvstorePrefix);
+  ConnectionConfig * tcconf = new ConnectionConfig(host, port);
+  (*tcconf).setKVStore(kvstorePrefix);
+
   ok = gTacDriver.init(tcconf);
   if (!ok) {
     printf("fail to initialize tachyon driver\n");
@@ -161,7 +167,7 @@ void setupTachyonDriver()
 void setupRedisDriver()
 {
   bool ok;
-  const char *host = NULL;
+  const char *cluster = NULL;
   const char *sport = NULL;
   const char *stimeout = NULL;
   int port; 
@@ -173,8 +179,8 @@ void setupRedisDriver()
     fprintf(stderr, "Error: empty redis configurations\n");
     exit(1);
   }
-  host = getConfig(rd_configs, "redis", "host");
-  if (host == NULL)
+  cluster = getConfig(rd_configs, "redis", "cluster");
+  if (cluster == NULL)
     exit(1);
   sport = getConfig(rd_configs, "redis", "port");
   if (sport == NULL)
@@ -202,8 +208,7 @@ void setupRedisDriver()
     timeout = 1.5;
   }
   
-  ConnectionConfig * rdconf = new ConnectionConfig(host, port, NULL, NULL, 
-      NULL, NULL);
+  ConnectionConfig * rdconf = new ConnectionConfig(cluster, port);
   ok = gRedDriver.init(rdconf);
   if (!ok) {
     printf("fail to initialize redis driver\n");
