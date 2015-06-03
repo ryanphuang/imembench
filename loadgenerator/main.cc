@@ -107,10 +107,10 @@ void setupRamCloudDriver()
     exit(1);
   }
   printf("ramcloud driver for %s successfully initialized\n", rcconf->getLocator());
-  // char buf[256];
-  // rcdriver.write("fooo", "bar", 4); // also store the '\0' in value
-  // rcdriver.read("fooo", buf, sizeof(buf));
-  // printf("['%s']=%s\n", "fooo", buf);
+  char buf[64];
+  gRamDriver.write("fooo", "bar", 4); // also store the '\0' in value
+  gRamDriver.read("fooo", buf, sizeof(buf));
+  printf("['%s']=%s\n", "fooo", buf);
 }
 
 void setupTachyonDriver()
@@ -152,20 +152,64 @@ void setupTachyonDriver()
   }
   printf("tachyon driver successfully initialized\n");
 
-  char buf[256];
-  gTacDriver.write("hello", "bar", 4); // also store the '\0' in value
-  gTacDriver.read("hello", buf, sizeof(buf));
+  char buf[32];
+  gTacDriver.write("fooo", "bar", 4); // also store the '\0' in value
+  gTacDriver.read("fooo", buf, sizeof(buf));
   printf("['%s']=%s\n", "hello", buf);
 }
 
 void setupRedisDriver()
 {
+  bool ok;
+  const char *host = NULL;
+  const char *sport = NULL;
+  const char *stimeout = NULL;
+  int port; 
+  double timeout;
+
   BenchConfigMap rd_configs;
   rd_configs = gParser.getSectionConfigs("redis");
   if (rd_configs.size() == 0) {
     fprintf(stderr, "Error: empty redis configurations\n");
     exit(1);
   }
+  host = getConfig(rd_configs, "redis", "host");
+  if (host == NULL)
+    exit(1);
+  sport = getConfig(rd_configs, "redis", "port");
+  if (sport == NULL)
+    exit(1);
+  std::stringstream ss(sport);
+  ss >> port;
+  if (!ss) {
+    fprintf(stderr, "Error: 'port'=%s is not an integer\n", sport);
+    exit(1);
+  }
+
+  stimeout = getConfig(rd_configs, "redis", "timeout");
+  if (stimeout != NULL) {
+    std::stringstream ss(stimeout);
+    ss >> timeout;
+    if (!ss) {
+      fprintf(stderr, "Error: 'port'=%s is not an integer\n", sport);
+      exit(1);
+    }
+    if (timeout <= 0) {
+      fprintf(stderr, "Error: 'timeout'=%s is not positive\n", stimeout);
+      exit(1);
+    }
+  } else {
+    timeout = 1.5;
+  }
+  
+  ConnectionConfig * rdconf = new ConnectionConfig(host, port, NULL, NULL, 
+      NULL, NULL);
+  ok = gRedDriver.init(rdconf);
+  if (!ok) {
+    printf("fail to initialize redis driver\n");
+    exit(1);
+  }
+  printf("redis driver successfully initialized\n");
 }
 
 int main(int argc, char ** argv)
@@ -190,6 +234,7 @@ int main(int argc, char ** argv)
     exit(1);
   }
   // setupRamCloudDriver();
-  setupTachyonDriver();
+  // setupTachyonDriver();
+  setupRedisDriver();
   return 0;
 }

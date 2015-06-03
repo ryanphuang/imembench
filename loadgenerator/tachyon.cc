@@ -11,6 +11,7 @@ using namespace std;
 
 bool TachyonDriver::init(ConnectionConfig *config)
 {
+  reset();
   const char *host = config->getHost();
   int port = config->getPort();
   std::stringstream ss;

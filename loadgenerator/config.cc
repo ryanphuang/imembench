@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <cctype>
 #include <algorithm>
@@ -10,6 +11,33 @@
 
 using namespace std;
 
+ConnectionConfig::ConnectionConfig(const char *host, int port, 
+    const char *transport, const char *clusterName, 
+    const char *testTableName, const char *kvStorePrefix, 
+    double timeout) {
+      if (host != NULL)
+        m_host.assign(host);
+      m_port = port;
+      if (transport != NULL) {
+        m_transport.assign(transport);
+        stringstream ss;
+        ss << m_transport << ":host=" << m_host << ",port=" << port;
+        m_locator = ss.str();
+      }
+      if (clusterName != NULL)
+        m_cluster_name.assign(clusterName);
+      if (testTableName != NULL)
+        m_test_table.assign(testTableName); 
+      if (kvStorePrefix != NULL) {
+        m_kvstore_prefix.assign(kvStorePrefix);
+        // make sure the prefix ends with a slash
+        if (!m_kvstore_prefix.empty() && 
+            m_kvstore_prefix[m_kvstore_prefix.length() - 1] != '/') {
+          m_kvstore_prefix += '/';
+        }
+      }
+      m_timeout = timeout;
+}
 inline bool NotSpace(char c)
 {
   return !isspace(c);
