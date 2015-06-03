@@ -76,8 +76,10 @@ class BenchDriverBase {
     virtual ~BenchDriverBase() {}
 
     virtual bool init(ConnectionConfig *config) = 0;
+    virtual void reset() = 0;
+
     virtual void write(const char *key, const char *value, uint32_t len) = 0;
-    virtual void read(const char *key, char *buff, uint32_t len) = 0;
+    virtual int read(const char *key, char *buff, uint32_t len) = 0;
     virtual void *getClient() = 0;
 
   protected:
@@ -88,12 +90,13 @@ class BenchDriverBase {
 
 class RamCloudDriver : BenchDriverBase {
   public:
-    RamCloudDriver();
-    ~RamCloudDriver();
+    ~RamCloudDriver() { reset(); }
 
     bool init(ConnectionConfig *config);
+    void reset();
+  
     void write(const char *key, const char *value, uint32_t len);
-    void read(const char *key, char *buff, uint32_t len);
+    int read(const char *key, char *buff, uint32_t len);
     void *getClient() { return m_client; }
 
   protected:
@@ -104,9 +107,13 @@ class RamCloudDriver : BenchDriverBase {
 
 class TachyonDriver : BenchDriverBase {
   public:
+    ~TachyonDriver() { reset(); }
+
     bool init(ConnectionConfig *config);
+    void reset();
+
     void write(const char *key, const char *value, uint32_t len);
-    void read(const char *key, char *buff, uint32_t len);
+    int read(const char *key, char *buff, uint32_t len);
     void *getClient() { return m_client; }
 
   protected:
@@ -115,9 +122,13 @@ class TachyonDriver : BenchDriverBase {
 
 class RedisDriver : BenchDriverBase {
   public:
+    ~RedisDriver() { reset(); }
+
     bool init(ConnectionConfig *config);
+    void reset();
+
     void write(const char *key, const char *value, uint32_t len);
-    void read(const char *key, char *buff, uint32_t len);
+    int read(const char *key, char *buff, uint32_t len);
     void *getClient() { return m_client; }
 
   protected:

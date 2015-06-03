@@ -150,6 +150,12 @@ void setupTachyonDriver()
     printf("fail to initialize tachyon driver\n");
     exit(1);
   }
+  printf("tachyon driver successfully initialized\n");
+
+  char buf[256];
+  gTacDriver.write("hello", "bar", 4); // also store the '\0' in value
+  gTacDriver.read("hello", buf, sizeof(buf));
+  printf("['%s']=%s\n", "hello", buf);
 }
 
 void setupRedisDriver()
@@ -183,7 +189,7 @@ int main(int argc, char ** argv)
     fprintf(stderr, "Error: invalid configuration file\n");
     exit(1);
   }
-  setupRamCloudDriver();
-
+  // setupRamCloudDriver();
+  setupTachyonDriver();
   return 0;
 }

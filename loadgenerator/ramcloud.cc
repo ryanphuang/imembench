@@ -6,17 +6,14 @@
 
 using namespace RAMCloud;
 
-RamCloudDriver::RamCloudDriver()
+void RamCloudDriver::reset()
 {
-  m_buffer = new Buffer();
-}
-
-RamCloudDriver::~RamCloudDriver()
-{
-  if (m_initialized && m_client != NULL) {
+  if (m_initialized && m_client != NULL && m_config != NULL) {
     const char *testTableName = m_config->getTestTableName();
-    m_client->dropTable(testTableName);
-    printf("test table '%s' dropped\n", testTableName);
+    if (strlen(testTableName) > 0) {
+      m_client->dropTable(testTableName);
+      printf("test table '%s' dropped\n", testTableName);
+    }
   }
   // TODO: WTF, we can't destroy the client!!
   // if (m_client != NULL)
@@ -25,10 +22,20 @@ RamCloudDriver::~RamCloudDriver()
     delete m_buffer;
   if (m_config != NULL)
     delete m_config;
+
+  m_initialized = false;
+  m_config = NULL;
+
+  m_client = NULL;
+  m_buffer = NULL;
+  m_test_table_id = 0;
 }
 
 bool RamCloudDriver::init(ConnectionConfig *config) 
 {
+  reset();
+  m_buffer = new Buffer();
+
   const char *cname = config->getClusterName();
   if (cname == NULL || strlen(cname) == 0)
     m_client = new RamCloud(config->getLocator());
@@ -63,11 +70,12 @@ inline void RamCloudDriver::write(const char *key, const char *value, uint32_t l
                     value, len);
 }
 
-inline void RamCloudDriver::read(const char *key, char *buf, uint32_t len)
+inline int RamCloudDriver::read(const char *key, char *buf, uint32_t len)
 {
-  uint32_t sz  = m_buffer->size();
   m_client->read(m_test_table_id, key, downCast<uint16_t>(strlen(key)), 
                     m_buffer);
+  uint32_t sz = m_buffer->size();
   strncpy(buf, static_cast<const char *>(m_buffer->getRange(0, sz)), len);
+  return sz > len ? len : sz;
 }
 
