@@ -62,8 +62,10 @@ bool BenchConfigParser::parse(const char *filename)
       }
     }
     ifs.close();
+    return true;
+  } else {
+    return false;
   }
-  return true;
 }
 
 const char *BenchConfigParser::getConfig(const char *section, const char *key, 

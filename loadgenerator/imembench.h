@@ -2,7 +2,6 @@
 #define __IMEMBENCH_H_
 
 #include <cstdlib>
-#include <cstring>
 #include <string>
 #include <sstream>
 
@@ -21,7 +20,8 @@ class redisContext;
 class ConnectionConfig {
   public:
      ConnectionConfig(const char *host, int port, const char *transport = NULL, 
-          const char *clusterName = NULL, const char * testTableName = NULL) {
+          const char *clusterName = NULL, const char *testTableName = NULL, 
+          const char *kvStorePrefix = NULL) {
       if (host != NULL)
         m_host.assign(host);
       m_port = port;
@@ -35,6 +35,14 @@ class ConnectionConfig {
         m_cluster_name.assign(clusterName);
       if (testTableName != NULL)
         m_test_table.assign(testTableName); 
+      if (kvStorePrefix != NULL) {
+        m_kvstore_prefix.assign(kvStorePrefix);
+        // make sure the prefix ends with a slash
+        if (!m_kvstore_prefix.empty() && 
+            m_kvstore_prefix[m_kvstore_prefix.length() - 1] != '/') {
+          m_kvstore_prefix += '/';
+        }
+      }
     }
 
     const char *getHost() { return m_host.c_str(); }
@@ -43,6 +51,7 @@ class ConnectionConfig {
     const char *getLocator() { return m_locator.c_str(); }
     const char *getClusterName() { return m_cluster_name.c_str(); }
     const char *getTestTableName() { return m_test_table.c_str(); }
+    const char *getKVStorePrefix() { return m_kvstore_prefix.c_str(); }
 
   private:
     std::string m_host;
@@ -52,6 +61,8 @@ class ConnectionConfig {
     std::string m_cluster_name; // for ramcloud
     std::string m_locator; // for ramcloud
     std::string m_test_table; // for ramcloud
+
+    std::string m_kvstore_prefix; // for tachyon
 };
 
 class BenchDriverBase {

@@ -23,6 +23,8 @@ RamCloudDriver::~RamCloudDriver()
   //  delete m_client;
   if (m_buffer != NULL)
     delete m_buffer;
+  if (m_config != NULL)
+    delete m_config;
 }
 
 bool RamCloudDriver::init(ConnectionConfig *config) 
