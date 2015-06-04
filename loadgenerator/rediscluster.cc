@@ -1,8 +1,10 @@
 #include <hiredis.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <math.h>
 #include <algorithm>
+#include <sstream>
 
 #include "rediscluster.h"
 #include "util.h"
@@ -111,8 +113,8 @@ bool RedisCluster::buildSlots()
           KeySlot slot;
           RClientConnMap::iterator cit;
 
-          slot.start = (unsigned int) (rele->element[0]->integer);
-          slot.end = (unsigned int) (rele->element[1]->integer);
+          slot.start = (uint32_t) (rele->element[0]->integer);
+          slot.end = (uint32_t) (rele->element[1]->integer);
           const char * host = rele->element[2]->element[0]->str;
           int port = (int) (rele->element[2]->element[1]->integer);
 
@@ -158,7 +160,7 @@ void RedisCluster::getClients(vector<redisContext *> &clients)
   }
 }
 
-redisContext *RedisCluster::getClientForKey(const char *key, unsigned int keylen)
+redisContext *RedisCluster::getClientForKey(const char *key, uint32_t keylen)
 {
   if (m_clientslot_map.empty()) {
     printf("Error: empty slot map\n");
@@ -182,4 +184,33 @@ redisContext *RedisCluster::getClientForKey(const char *key, unsigned int keylen
         it->first.end);
     return NULL;
   }
+}
+
+redisReply *RedisCluster::retryMovedCommand(redisContext *context, 
+    const char *format, ...)
+{
+  va_list arg;
+  va_start(arg, format);
+  redisReply *reply = (redisReply *) redisvCommand(context, format, arg);
+  if (reply->type == REDIS_REPLY_ERROR) {
+    string error(reply->str, reply->len);
+    if (error.compare(0, 5, "MOVED") == 0) {
+      size_t host_pos = error.find_last_of(' ') + 1;
+      size_t port_pos = error.find_last_of(':') + 1;
+      string shost = error.substr(host_pos, port_pos - host_pos - 1);
+      string sport = error.substr(port_pos);
+      stringstream ss(sport);
+      int port;
+      ss >> port;
+      printf("command should be redirected to %s:%d\n", shost.c_str(), port);
+      redisContext *newc = connect(shost.c_str(), port, NULL);
+      if (newc != NULL) {
+        redisReply *newreply = (redisReply *) redisvCommand(newc,format, arg);
+        freeReplyObject(reply); // free old reply object
+        reply = newreply;
+      }
+    }
+  }
+  va_end(arg);
+  return reply;
 }

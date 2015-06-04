@@ -1,8 +1,9 @@
 #include <hiredis.h>
 
-#include <string.h>
-#include <stdio.h>
-#include <math.h>
+#include <string>
+#include <cstring>
+#include <cstdio>
+#include <cmath>
 
 #include "imembench.h"
 #include "rediscluster.h"
@@ -41,11 +42,25 @@ void RedisDriver::reset()
 
 void RedisDriver::write(const char *key, const char *value, uint32_t len)
 {
-
+  redisContext *c = m_client->getClientForKey(key, (uint32_t) strlen(key));
+  if (c != NULL) {
+    redisReply *reply = m_client->retryMovedCommand(c,"SET %s %s", key, value);
+    freeReplyObject(reply);
+  }
 }
 
 int RedisDriver::read(const char *key, char *buff, uint32_t len)
 {
-  return -1;
+  int rd = -1;
+  redisContext *c = m_client->getClientForKey(key, (uint32_t) strlen(key));
+  if (c != NULL) {
+    redisReply *reply = m_client->retryMovedCommand(c, "GET %s", key);
+    if (reply->type == REDIS_REPLY_STRING) {
+      strncpy(buff, reply->str, len);
+      rd = strnlen(buff, len);
+    }
+    freeReplyObject(reply);
+  }
+  return rd;
 }
 

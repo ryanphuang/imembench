@@ -5,10 +5,12 @@
 #include <utility>
 #include <vector>
 #include <string.h>
+#include <stdint.h>
 
 #include "config.h"
 
-class redisContext;
+struct redisContext;
+struct redisReply;
 
 #define CLUSTER_SLOTS_CMD    "CLUSTER SLOTS"
 
@@ -22,8 +24,8 @@ typedef std::map<KeyHost, redisContext *, KeyHostComp> RClientConnMap;
 typedef std::map<KeySlot, redisContext *, KeySlotComp> RClientSlotMap;
 
 typedef struct KeySlot {
-  unsigned int start;
-  unsigned int end;
+  uint32_t start;
+  uint32_t end;
 } KeySlot;
 
 typedef struct KeySlotComp {
@@ -53,7 +55,8 @@ class RedisCluster {
     redisContext *connect(const char *host, int port, struct timeval *tv);
     bool buildSlots();
     void getClients(std::vector<redisContext *> &clients);
-    redisContext *getClientForKey(const char *key, unsigned int keylen);
+    redisContext *getClientForKey(const char *key, uint32_t keylen);
+    redisReply *retryMovedCommand(redisContext *context, const char *format, ...);
 
   private:
     bool m_initialized;

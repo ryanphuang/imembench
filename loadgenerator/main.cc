@@ -116,7 +116,7 @@ void setupRamCloudDriver()
   char buf[64];
   gRamDriver.write("fooo", "bar", 4); // also store the '\0' in value
   gRamDriver.read("fooo", buf, sizeof(buf));
-  printf("['%s']=%s\n", "fooo", buf);
+  printf("[fooo]=%s\n", buf);
 }
 
 void setupTachyonDriver()
@@ -162,7 +162,7 @@ void setupTachyonDriver()
   char buf[32];
   gTacDriver.write("fooo", "bar", 4); // also store the '\0' in value
   gTacDriver.read("fooo", buf, sizeof(buf));
-  printf("['%s']=%s\n", "hello", buf);
+  printf("['fooo']=%s\n", buf);
 }
 
 void setupRedisDriver()
@@ -222,6 +222,7 @@ void setupRedisDriver()
     printf("fail to initialize redis driver\n");
     exit(1);
   }
+
   RedisCluster *client = (RedisCluster *) gRedDriver.getClient();
   client->getClientForKey("hello", 5);
   client->getClientForKey("world", 5);
@@ -229,6 +230,11 @@ void setupRedisDriver()
   client->getClientForKey("bar", 3);
   client->getClientForKey("barrrr", 6);
   printf("redis driver successfully initialized\n");
+
+  char buf[32];
+  gRedDriver.write("world", "hello", 6); // also store the '\0' in value
+  gRedDriver.read("world", buf, sizeof(buf));
+  printf("[world]=%s\n", buf);
 }
 
 int main(int argc, char ** argv)
