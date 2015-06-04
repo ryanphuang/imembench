@@ -1,5 +1,5 @@
-#ifndef __HASH_H_
-#define __HASH_H_
+#ifndef __IMEMBENCH_UTIL_H_
+#define __IMEMBENCH_UTIL_H_
 
 #include <stdint.h>
 
@@ -10,10 +10,12 @@ extern "C" {
 uint16_t crc16(const char *key, unsigned int keylen);
 unsigned int HASH_SLOT(const char *key, unsigned int keylen);
 
+bool resolve(const char *hostname, char *ip, int iplen);
+
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __HASH_H_ */
+#endif /* __IMEMBENCH_UTIL_H_ */
 
 /* vim: set ts=4 sw=4 : */

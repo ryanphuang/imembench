@@ -1,4 +1,11 @@
-#include "hash.h"
+#include "util.h"
+
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <stdlib.h>
+#include <string.h>
 
 static const uint16_t crc16tab[256]= {
     0x0000,0x1021,0x2042,0x3063,0x4084,0x50a5,0x60c6,0x70e7,
@@ -66,4 +73,16 @@ unsigned int HASH_SLOT(const char *key, unsigned int keylen) {
      * what is in the middle between { and }. */
     return crc16(key+s+1,e-s-1) & 16383;
 }
-
+bool resolve(const char *hostname, char *ip, int iplen)
+{
+  struct hostent *host;
+  host = gethostbyname(hostname);
+  if (host == NULL)
+    return false;
+  struct in_addr ** addrs = (struct in_addr **) host->h_addr_list;
+  if (addrs[0] != NULL) {
+    strncpy(ip, inet_ntoa(*addrs[0]), iplen);
+    return true;
+  }
+  return false;
+}

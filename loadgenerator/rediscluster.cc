@@ -5,7 +5,7 @@
 #include <algorithm>
 
 #include "rediscluster.h"
-#include "hash.h"
+#include "util.h"
 
 using namespace std;
 
@@ -41,7 +41,14 @@ bool RedisCluster::init(ConnectionConfig *config)
 
   HostList::iterator hit;
   for (hit = hosts.begin(); hit != hosts.end(); ++hit) {
-    redisContext* ctx = connect(hit->c_str(), port, &tv);
+    const char *host;
+    char ip[32];
+    if (resolve(hit->c_str(), ip, 32)) {
+      host = ip;
+    } else {
+      host = hit->c_str();
+    }
+    redisContext* ctx = connect(host, port, &tv);
     if (ctx == NULL)
       return false;
   }
@@ -65,10 +72,10 @@ redisContext *RedisCluster::connect(const char *host, int port, struct timeval *
     }
     return NULL;
   }
-  printf("Created redis context for %s:%d\n", host, port);
   // update the connection map
   m_clientconn_map.insert(make_pair(make_pair(
       ctx->tcp.host, ctx->tcp.port), ctx));
+  printf("Created redis context for %s:%d\n", ctx->tcp.host, ctx->tcp.port);
   return ctx;
 }
 

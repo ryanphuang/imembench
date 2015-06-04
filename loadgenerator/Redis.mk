@@ -1,3 +1,3 @@
 INCLUDES += -I$(INCLUDEDIR)/redis
 LDFLAGS += -lhiredis
-OBJS += hash.o redisdriver.o rediscluster.o
+OBJS += redisdriver.o rediscluster.o

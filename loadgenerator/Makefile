@@ -37,7 +37,7 @@ CXX ?= g++
 AR ?= ar
 
 TARGET := imembench
-OBJS := config.o main.o
+OBJS := util.o config.o main.o
 
 include Ramcloud.mk
 include Tachyon.mk

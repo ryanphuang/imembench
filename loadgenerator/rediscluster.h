@@ -4,6 +4,7 @@
 #include <map>
 #include <utility>
 #include <vector>
+#include <string.h>
 
 #include "config.h"
 
@@ -13,9 +14,11 @@ class redisContext;
 
 struct KeySlot;
 struct KeySlotComp;
+struct KeyHostComp;
 
+typedef std::pair<const char *, int> KeyHost;
 typedef std::vector<redisContext *> RClients;
-typedef std::map<std::pair<const char *, int>, redisContext *> RClientConnMap;
+typedef std::map<KeyHost, redisContext *, KeyHostComp> RClientConnMap;
 typedef std::map<KeySlot, redisContext *, KeySlotComp> RClientSlotMap;
 
 typedef struct KeySlot {
@@ -29,6 +32,17 @@ typedef struct KeySlotComp {
     return lhs.start < rhs.start; 
   }
 } KeySlotComp;
+
+typedef struct KeyHostComp {
+  bool operator() (const KeyHost &lhs, const KeyHost &rhs) const
+  {
+    int cmp = strcmp(lhs.first, rhs.first); 
+    if (cmp == 0)
+      return lhs.second < rhs.second;
+    return cmp < 0;
+  }
+
+} KeyHostComp;
 
 class RedisCluster {
   public:
