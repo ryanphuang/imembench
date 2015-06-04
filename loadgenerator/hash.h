@@ -1,12 +1,14 @@
 #ifndef __HASH_H_
 #define __HASH_H_
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-unsigned int HASH_SLOT(char *key, unsigned int keylen);
-unsigned int crc16(char *key, unsigned int keylen);
+uint16_t crc16(const char *key, unsigned int keylen);
+unsigned int HASH_SLOT(const char *key, unsigned int keylen);
 
 #ifdef __cplusplus
 }

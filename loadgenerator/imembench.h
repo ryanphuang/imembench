@@ -18,7 +18,8 @@ namespace RAMCloud {
 namespace tachyon {
   class TachyonClient;
 }
-class redisContext;
+class RedisCluster;
+
 //////////////////////////////
 class BenchDriverBase {
   public:
@@ -35,6 +36,8 @@ class BenchDriverBase {
 
     virtual void write(const char *key, const char *value, uint32_t len) = 0;
     virtual int read(const char *key, char *buff, uint32_t len) = 0;
+
+    virtual void *getClient() = 0;
 
   protected:
     bool m_initialized;
@@ -83,10 +86,10 @@ class RedisDriver : BenchDriverBase {
 
     void write(const char *key, const char *value, uint32_t len);
     int read(const char *key, char *buff, uint32_t len);
-    void getClients(std::vector<void *> &clients);  
+    void *getClient()  { return m_client; } 
 
   protected:
-    std::map<std::pair<const char *, int>, redisContext *> m_clients;
+    RedisCluster *m_client;
 };
 
 #endif /* __IMEMBENCH_H_ */

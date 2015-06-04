@@ -1,5 +1,6 @@
 #include "imembench.h"
 #include "config.h"
+#include "rediscluster.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -221,6 +222,12 @@ void setupRedisDriver()
     printf("fail to initialize redis driver\n");
     exit(1);
   }
+  RedisCluster *client = (RedisCluster *) gRedDriver.getClient();
+  client->getClientForKey("hello", 5);
+  client->getClientForKey("world", 5);
+  client->getClientForKey("foo", 3);
+  client->getClientForKey("bar", 3);
+  client->getClientForKey("barrrr", 6);
   printf("redis driver successfully initialized\n");
 }
 
