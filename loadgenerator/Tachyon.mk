@@ -46,4 +46,4 @@ JAVA_LDS := -L$(JAVA_HOME)/jre/lib/$(OS_ARCH)/server -ljvm
 INCLUDES += -I$(INCLUDEDIR)/tachyon $(JAVA_INCLUDES)
 LDFLAGS += -L$(JAVA_HOME)/jre/lib/$(OS_ARCH)/server -ljvm -ltachyon
 
-OBJS += tachyon.o
+OBJS += tachyondriver.o

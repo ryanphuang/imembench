@@ -8,4 +8,4 @@ ifeq ($(VALGRIND),yes)
 CXXFLAGS += -DVALGRIND
 endif
 
-OBJS += ramcloud.o
+OBJS += ramclouddriver.o

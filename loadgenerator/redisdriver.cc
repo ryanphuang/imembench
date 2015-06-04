@@ -57,7 +57,7 @@ int RedisDriver::read(const char *key, char *buff, uint32_t len)
     redisReply *reply = m_client->retryMovedCommand(c, "GET %s", key);
     if (reply->type == REDIS_REPLY_STRING) {
       strncpy(buff, reply->str, len);
-      rd = strnlen(buff, len);
+      rd = (int) strnlen(buff, len);
     }
     freeReplyObject(reply);
   }
