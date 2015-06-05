@@ -64,18 +64,20 @@ bool RamCloudDriver::init(ConnectionConfig *config)
   return true;
 }
 
-inline void RamCloudDriver::write(const char *key, const char *value, uint32_t len)
+inline void RamCloudDriver::write(const char *key, uint32_t keylen, 
+      const char *value, uint32_t valuelen)
 {
-  m_client->write(m_test_table_id, key, downCast<uint16_t>(strlen(key)), 
-                    value, len);
+  m_client->write(m_test_table_id, key, downCast<uint16_t>(keylen), 
+                    value, valuelen);
 }
 
-inline int RamCloudDriver::read(const char *key, char *buf, uint32_t len)
+inline int RamCloudDriver::read(const char *key, uint32_t keylen,
+      char *buf, uint32_t bufflen)
 {
-  m_client->read(m_test_table_id, key, downCast<uint16_t>(strlen(key)), 
-                    m_buffer);
+  m_client->read(m_test_table_id, key, downCast<uint16_t>(keylen), 
+      m_buffer);
   uint32_t sz = m_buffer->size();
-  strncpy(buf, static_cast<const char *>(m_buffer->getRange(0, sz)), len);
-  return sz > len ? len : sz;
+  strncpy(buf, static_cast<const char *>(m_buffer->getRange(0, sz)), bufflen);
+  return sz > bufflen ? bufflen : sz;
 }
 

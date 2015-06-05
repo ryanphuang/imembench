@@ -38,8 +38,8 @@ class BenchDriverBase {
     virtual bool init(ConnectionConfig *config) = 0;
     virtual void reset() = 0;
 
-    virtual void write(const char *key, const char *value, uint32_t len) = 0;
-    virtual int read(const char *key, char *buff, uint32_t len) = 0;
+    virtual void write(const char *key, uint32_t keylen, const char *value, uint32_t valuelen) = 0;
+    virtual int read(const char *key, uint32_t keylen, char *buff, uint32_t bufflen) = 0;
 
     virtual const char *getName() { return m_name; }
     virtual void *getClient() = 0;
@@ -70,8 +70,8 @@ class RamCloudDriver : public BenchDriverBase {
     bool init(ConnectionConfig *config);
     void reset();
   
-    void write(const char *key, const char *value, uint32_t len);
-    int read(const char *key, char *buff, uint32_t len);
+    void write(const char *key, uint32_t keylen, const char *value, uint32_t valuelen);
+    int read(const char *key, uint32_t keylen, char *buff, uint32_t bufflen);
     void *getClient() { return m_client; }
 
   protected:
@@ -88,8 +88,8 @@ class TachyonDriver : public BenchDriverBase {
     bool init(ConnectionConfig *config);
     void reset();
 
-    void write(const char *key, const char *value, uint32_t len);
-    int read(const char *key, char *buff, uint32_t len);
+    void write(const char *key, uint32_t keylen, const char *value, uint32_t valuelen);
+    int read(const char *key, uint32_t keylen, char *buff, uint32_t bufflen);
     void *getClient() { return m_client; }
 
   protected:
@@ -104,8 +104,8 @@ class RedisDriver : public BenchDriverBase {
     bool init(ConnectionConfig *config);
     void reset();
 
-    void write(const char *key, const char *value, uint32_t len);
-    int read(const char *key, char *buff, uint32_t len);
+    void write(const char *key, uint32_t keylen, const char *value, uint32_t valuelen);
+    int read(const char *key, uint32_t keylen, char *buff, uint32_t bufflen);
     void *getClient()  { return m_client; } 
 
   protected:

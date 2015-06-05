@@ -40,24 +40,28 @@ void RedisDriver::reset()
   m_config = NULL;
 }
 
-void RedisDriver::write(const char *key, const char *value, uint32_t len)
+void RedisDriver::write(const char *key, uint32_t keylen,
+        const char *value, uint32_t valuelen)
 {
-  redisContext *c = m_client->getClientForKey(key, (uint32_t) strlen(key));
+  redisContext *c = m_client->getClientForKey(key, keylen);
   if (c != NULL) {
-    redisReply *reply = m_client->retryMovedCommand(c,"SET %s %s", key, value);
+    redisReply *reply = m_client->retryMovedCommand(c,"SET %s %s", 
+      string(key, keylen).c_str(), value);
     freeReplyObject(reply);
   }
 }
 
-int RedisDriver::read(const char *key, char *buff, uint32_t len)
+int RedisDriver::read(const char *key, uint32_t keylen, 
+        char *buff, uint32_t bufflen)
 {
   int rd = -1;
-  redisContext *c = m_client->getClientForKey(key, (uint32_t) strlen(key));
+  redisContext *c = m_client->getClientForKey(key, keylen);
   if (c != NULL) {
-    redisReply *reply = m_client->retryMovedCommand(c, "GET %s", key);
+    redisReply *reply = m_client->retryMovedCommand(c, 
+        "GET %s", string(key, keylen).c_str());
     if (reply->type == REDIS_REPLY_STRING) {
-      strncpy(buff, reply->str, len);
-      rd = (int) strnlen(buff, len);
+      strncpy(buff, reply->str, bufflen);
+      rd = (int) strnlen(buff, bufflen);
     }
     freeReplyObject(reply);
   }

@@ -52,11 +52,12 @@ void TachyonDriver::reset()
   m_config = NULL;
 }
 
-inline void TachyonDriver::write(const char *key, const char *value, uint32_t len)
+inline void TachyonDriver::write(const char *key, uint32_t keylen,
+        const char *value, uint32_t valuelen)
 {
   const char *kvprefix = m_config->getKVStorePrefix();
   string s1(kvprefix);
-  s1.append(key);
+  s1.append(key, keylen);
   jTachyonFile jfile = m_client->getFile(s1.c_str());
   if (jfile != NULL) {
     delete jfile;
@@ -70,7 +71,7 @@ inline void TachyonDriver::write(const char *key, const char *value, uint32_t le
   if (jfile != NULL) {
     jOutStream ostream = jfile->getOutStream(MUST_CACHE);
     if (ostream != NULL) {
-      ostream->write(value, len);
+      ostream->write(value, valuelen);
       ostream->close();
       delete ostream;
     }
@@ -78,18 +79,19 @@ inline void TachyonDriver::write(const char *key, const char *value, uint32_t le
   }
 }
 
-inline int TachyonDriver::read(const char *key, char *buff, uint32_t len)
+inline int TachyonDriver::read(const char *key, uint32_t keylen, 
+        char *buff, uint32_t valuelen)
 {
   int sz = -1;
   const char *kvprefix = m_config->getKVStorePrefix();
   string s1(kvprefix);
-  s1.append(key);
+  s1.append(key, keylen);
   jTachyonFile jfile = m_client->getFile(s1.c_str());
-  if (jfile == NULL)
+  if (jfile == NULL || jfile->getJObj() == NULL)
     return sz;
   jInStream istream = jfile->getInStream(CACHE);
   if (istream != NULL) {
-    sz = istream->read(buff, len);
+    sz = istream->read(buff, valuelen);
     istream->close();
     delete istream;
   }

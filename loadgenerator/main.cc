@@ -18,8 +18,8 @@ RedisDriver gRedDriver("redis");
 
 BenchDriverBase *gDrivers[] = {
   &gRamDriver,
-  &gTacDriver,
-  &gRedDriver,
+//  &gTacDriver,
+//  &gRedDriver,
 };
 
 size_t gNdriver = sizeof(gDrivers) / sizeof(gDrivers[0]);
@@ -127,8 +127,8 @@ void setupRamCloudDriver()
   printf("               smoke test ramcloud                      \n");
   printf("========================================================\n");
   char buf[64];
-  gRamDriver.write("fooo", "bar", 4); // also store the '\0' in value
-  gRamDriver.read("fooo", buf, sizeof(buf));
+  gRamDriver.write("fooo", 4, "bar", 4); // also store the '\0' in value
+  gRamDriver.read("fooo", 4, buf, sizeof(buf));
   printf("[fooo]=%s\n", buf);
   printf("========================================================\n");
 }
@@ -177,8 +177,8 @@ void setupTachyonDriver()
   printf("               smoke test tachyon                       \n");
   printf("========================================================\n");
   char buf[32];
-  gTacDriver.write("fooo", "bar", 4); // also store the '\0' in value
-  gTacDriver.read("fooo", buf, sizeof(buf));
+  gTacDriver.write("fooo", 4, "bar", 4); // also store the '\0' in value
+  gTacDriver.read("fooo", 4, buf, sizeof(buf));
   printf("['fooo']=%s\n", buf);
   printf("========================================================\n");
 }
@@ -253,8 +253,8 @@ void setupRedisDriver()
   printf("               smoke test redis                         \n");
   printf("========================================================\n");
   char buf[32];
-  gRedDriver.write("world", "hello", 6); // also store the '\0' in value
-  gRedDriver.read("world", buf, sizeof(buf));
+  gRedDriver.write("world", 5, "hello", 6); // also store the '\0' in value
+  gRedDriver.read("world", 5, buf, sizeof(buf));
   printf("[world]=%s\n", buf);
   printf("========================================================\n");
 }
