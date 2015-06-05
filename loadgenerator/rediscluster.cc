@@ -163,8 +163,12 @@ void RedisCluster::getClients(vector<redisContext *> &clients)
 redisContext *RedisCluster::getClientForKey(const char *key, uint32_t keylen)
 {
   if (m_clientslot_map.empty()) {
-    printf("Error: empty slot map\n");
-    return NULL;
+    if (m_clientconn_map.empty()) {
+      printf("Error: no client to return, empty slot map and connection map\n");
+      return NULL;
+    }
+    printf("Warning: empty slot map, returning first (if any) client\n");
+    return m_clientconn_map.begin()->second;
   }
 
   unsigned int slot = HASH_SLOT(key, keylen);
@@ -192,6 +196,7 @@ redisReply *RedisCluster::retryMovedCommand(redisContext *context,
   va_list arg;
   va_start(arg, format);
   redisReply *reply = (redisReply *) redisvCommand(context, format, arg);
+  va_end(arg);
   if (reply->type == REDIS_REPLY_ERROR) {
     string error(reply->str, reply->len);
     if (error.compare(0, 5, "MOVED") == 0) {
@@ -205,12 +210,13 @@ redisReply *RedisCluster::retryMovedCommand(redisContext *context,
       printf("command should be redirected to %s:%d\n", shost.c_str(), port);
       redisContext *newc = connect(shost.c_str(), port, NULL);
       if (newc != NULL) {
+        va_start(arg, format);
         redisReply *newreply = (redisReply *) redisvCommand(newc,format, arg);
+        va_end(arg);
         freeReplyObject(reply); // free old reply object
         reply = newreply;
       }
     }
   }
-  va_end(arg);
   return reply;
 }

@@ -11,9 +11,18 @@
 const char * program_name;
 
 BenchConfigParser gParser;
-RamCloudDriver gRamDriver;
-TachyonDriver gTacDriver;
-RedisDriver gRedDriver;
+
+RamCloudDriver gRamDriver("ramcloud");
+TachyonDriver gTacDriver("tachyon");
+RedisDriver gRedDriver("redis");
+
+BenchDriverBase *gDrivers[] = {
+  &gRamDriver,
+  &gTacDriver,
+  &gRedDriver,
+};
+
+size_t gNdriver = sizeof(gDrivers) / sizeof(gDrivers[0]);
 
 void testConfigs(const char *configfile)
 {
@@ -113,10 +122,15 @@ void setupRamCloudDriver()
     exit(1);
   }
   printf("ramcloud driver for %s successfully initialized\n", rcconf->getLocator());
+
+  printf("========================================================\n");
+  printf("               smoke test ramcloud                      \n");
+  printf("========================================================\n");
   char buf[64];
   gRamDriver.write("fooo", "bar", 4); // also store the '\0' in value
   gRamDriver.read("fooo", buf, sizeof(buf));
   printf("[fooo]=%s\n", buf);
+  printf("========================================================\n");
 }
 
 void setupTachyonDriver()
@@ -159,10 +173,14 @@ void setupTachyonDriver()
   }
   printf("tachyon driver successfully initialized\n");
 
+  printf("========================================================\n");
+  printf("               smoke test tachyon                       \n");
+  printf("========================================================\n");
   char buf[32];
   gTacDriver.write("fooo", "bar", 4); // also store the '\0' in value
   gTacDriver.read("fooo", buf, sizeof(buf));
   printf("['fooo']=%s\n", buf);
+  printf("========================================================\n");
 }
 
 void setupRedisDriver()
@@ -231,10 +249,14 @@ void setupRedisDriver()
   client->getClientForKey("barrrr", 6);
   printf("redis driver successfully initialized\n");
 
+  printf("========================================================\n");
+  printf("               smoke test redis                         \n");
+  printf("========================================================\n");
   char buf[32];
   gRedDriver.write("world", "hello", 6); // also store the '\0' in value
   gRedDriver.read("world", buf, sizeof(buf));
   printf("[world]=%s\n", buf);
+  printf("========================================================\n");
 }
 
 int main(int argc, char ** argv)
@@ -258,8 +280,9 @@ int main(int argc, char ** argv)
     fprintf(stderr, "Error: invalid configuration file\n");
     exit(1);
   }
-  // setupRamCloudDriver();
-  // setupTachyonDriver();
+  setupRamCloudDriver();
+  setupTachyonDriver();
   setupRedisDriver();
+  runBenchMarks();
   return 0;
 }
