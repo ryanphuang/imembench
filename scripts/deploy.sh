@@ -9,7 +9,7 @@ else
     while read line           
     do
         echo "copy "$1" to "$line
-        path=`pwd -P $1`/$1
+        path=`dirname $1`/`basename $1`
         echo $path
         scp $path "$line":$path
     done <$WORKERLST
