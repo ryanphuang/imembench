@@ -5,6 +5,7 @@ FILE10=big.txt
 
 ###TODO: export
 TACHYON_HOME=/mnt/tachyon/tachyon-0.6.4
+
 TACHYON_MASTER=ccied6.sysnet.ucsd.edu
 
 USER=`whoami`
