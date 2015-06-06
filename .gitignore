@@ -7,6 +7,7 @@ bindings/redis/c/examples/hiredis-example*
 *.d
 *.pc
 *.swp
+*.log
 /loadgenerator/rcclient
 /loadgenerator/imembench
 /loadgenerator/imembench.ini
