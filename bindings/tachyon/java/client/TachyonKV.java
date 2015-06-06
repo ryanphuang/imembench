@@ -32,7 +32,7 @@ public class TachyonKV {
     mTachyonClient = client;
   }
 
-  private void write(String key, byte[] value) throws IOException {
+  public void write(String key, byte[] value) throws IOException {
     String filePath = KVSTORE_PREFIX + key;
     TachyonFile file = mTachyonClient.getFile(filePath);
     if (file != null) {
@@ -53,7 +53,7 @@ public class TachyonKV {
     }
   }
 
-  private int read(String key, byte[] value) throws IOException {
+  public int read(String key, byte[] value) throws IOException {
     int sz = -1;
     String filePath = KVSTORE_PREFIX + key;
     TachyonFile file = mTachyonClient.getFile(filePath);
@@ -67,6 +67,4 @@ public class TachyonKV {
     }
     return sz;
   }
-
-
 }
