@@ -22,7 +22,7 @@ mkdir -p ${WORK_DIR}/data-MicroBenchmarks/in
 
 cd ../BigDataGeneratorSuite/Text_datagen/
 
-./gen_text_data.sh lda_wiki1w 20 80 10 ${WORK_DIR}/data-MicroBenchmarks/in
+./gen_text_data.sh lda_wiki1w 20 8000 10000 ${WORK_DIR}/data-MicroBenchmarks/in
 #10GB 20 8000 10000
 #15GB 30 8000 10000
 #30GB 60 8000 10000
