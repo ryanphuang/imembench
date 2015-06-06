@@ -25,6 +25,7 @@ elif [ $1 == "stop" ]; then
   ./jmxmonitor.sh stop_mm
   #6. Collect the log
   ./jmxmonitor.sh collect_log
+  ./gccollector.sh
 else
   echo "Option is start|stop"
 fi
