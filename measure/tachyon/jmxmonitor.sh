@@ -11,7 +11,7 @@ fi
 
 if [ $# -ne 1 ]
 then
-  echo "please specify the file path to deploy'"
+  echo "Option is start_mm|stop_mm|collect_log"
   exit 1
 fi
 
