@@ -6,4 +6,10 @@ public class CliOptions {
 
   @Option(name="-t",usage="Time period (sec) to get the mm usage")
   public long period = 2;
+  
+  @Option(name="-o",usage="Location of the log file")
+  public String logfile = "";
+  
+  @Option(name="-d",usage="Dir to put the logs")
+  public String logdir = "";
 }
