@@ -1,0 +1,55 @@
+This project contains the Spark workloads in BigDataBench.
+This project is based on Spark-1.1.0 and scala-2.10.4.
+
+How to use BigDataBench's Spark workloads?
+
+Preparations:
+Make sure that Spark has been successfully installed.
+Configure you bash environment:
+$SPARK_HOME points to the path where spark installed;
+Add $SPARK_HOME/bin to the $PATH variable.
+Assume the bigdatabench-spark_2.10-1.1.0.jar file locates in $JAR_FILE.
+The JAR_FILE file you can find in /BigDataBench_V4.0_Spark+Shark/JAR_FILE;
+Add $JAR_FILE/bigdatabench-spark_2.10-1.1.0.jar to environment
+
+The workloads inculde:
+   Sort, Grep, WordCount, NaiveBayesTrainer, ConnectedComponent, PageRank, KMeans
+How to run:
+   Sort, Grep, WordCount
+            To generate data:
+                       cd /BigDataBench_V4.0_Spark/MicroBenchmarks
+                       sh genData_MicroBenchmarks.sh
+            To run workloads:
+                       cd /BigDataBench_V4.0_Spark/MicroBenchmarks
+                       sh run_MicroBenchmarks.sh
+   NaiveBayesTrainer
+            To generate data:
+                       cd /BigDataBench_V4.0_Spark/E-commerce
+                       sh genData_naivebayes.sh
+            To run workloads:
+                       cd /BigDataBench_V4.0_Spark/E-commerce  
+                       sh run_naivebayes.sh
+   ConnectedComponent
+            To generate data:
+                       cd /BigDataBench_V4.0_Spark/SNS/Connected_Components 
+                       sh genData_connectedComponents.sh
+            To run workloads:
+                       cd /BigDataBench_V4.0_Spark/SNS/Connected_Components
+                       sh run_connectComponents.sh
+   KMeans
+            To generate data:
+                       cd /BigDataBench_V4.0_Spark/SNS/Kmeans
+                       sh genData_Kmeans.sh
+            To run wordloads:
+                       cd /BigDataBench_V4.0_Spark/SNS/Kmeans
+                       sh run_Kmeans.sh
+   Pagerank
+            To generate data:
+                       cd /BigDataBench_V4.0_Spark/SearchEngine/Pagerank
+                       sh genData_PageRank.sh
+            To run wordloads:
+                       cd /BigDataBench_V4.0_Spark/SearchEngine/Pagerank
+                       sh run_Pagerank.sh
+
+
+
