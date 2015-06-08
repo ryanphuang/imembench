@@ -12,6 +12,7 @@ PREFIX=/user/$USER/data-MicroBenchmarks
 
 RAW_FILES=$PREFIX/in
 SORT_FILES=$PREFIX/sort-out
+TSORT_FILE=$PREFIX/tsort-file
 HDFS_OUTPUT=$PREFIX/out
 
 HDFS_PREFIX=hdfs://$HDFS_MASTER:9000$PREFIX
@@ -33,14 +34,12 @@ else
     elif [ $1 == "sort" ]; then
         echo "START RUN "$1
         $HADOOP_HOME/bin/hadoop fs -rm -r $HDFS_OUTPUT/sort
-        $HADOOP_HOME/bin/hadoop jar ${HADOOP_HOME}/share/hadoop/mapreduce/hadoop-mapreduce-examples-*.jar sort $SORT_FILES $HDFS_OUTPUT/sort
+        $HADOOP_HOME/bin/hadoop jar $HADOOP_HOME/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.5.2.jar sort $SORT_FILES $HDFS_OUTPUT/sort
 
     elif [ $1 == "terasort" ]; then
         echo "START RUN "$1
-        TSORT_FILE="tsort_data"
-        $HADOOP_HOME/bin/hdfs dfs -rm $HDFS_INPUT_DIR/$TSORT_FILE
-        $HADOOP_HOME/bin/hadoop jar $HADOOP_HOME/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.5.2.jar teragen 1000 $HDFS_INPUT_DIR/$TSORT_FILE
-        $HADOOP_HOME/bin/hadoop jar $HADOOP_HOME/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.5.2.jar terasort $HDFS_INPUT_DIR/$TSORT_FILE $HDFS_OUTPUT
+        $HADOOP_HOME/bin/hadoop fs -rm -r $HDFS_OUTPUT/terasort
+        $HADOOP_HOME/bin/hadoop jar $HADOOP_HOME/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.5.2.jar terasort $TSORT_FILE $HDFS_OUTPUT/terasort
     else
         echo "Sorry we do not support this benchmark ("$1")"
     fi

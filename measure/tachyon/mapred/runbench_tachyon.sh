@@ -12,6 +12,7 @@ TACHYON_PREFIX=tachyon://$TACHYON_MASTER:19998$PREFIX
 
 RAW_FILES=$TACHYON_PREFIX/in
 SORT_FILES=$TACHYON_PREFIX/sort-out
+TSORT_FILE=$TACHYON_PREFIX/tsort-file
 TACHYON_OUTPUT=$TACHYON_PREFIX/out
 
 if [ $# -ne 1 ]
@@ -35,11 +36,8 @@ else
         
     elif [ $1 == "terasort" ];then
         echo "START RUN "$1
-        TSORT_FILE="tsort_data"
-        $TACHYON_HOME/bin/tachyon tfs rmr $TACHYON_INPUT_DIR/$TSORT_FILE
-        $HADOOP_HOME/bin/hadoop jar $HADOOP_HOME/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.5.2.jar teragen -libjars $TACHYON_HOME/client/target/tachyon-client-0.6.4-jar-with-dependencies.jar 1000000 $TACHYON_INPUT_DIR/$TSORT_FILE
-        
-        $HADOOP_HOME/bin/hadoop jar $HADOOP_HOME/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.5.2.jar terasort -libjars $TACHYON_HOME/client/target/tachyon-client-0.6.4-jar-with-dependencies.jar $TACHYON_INPUT_DIR/$TSORT_FILE $TACHYON_OUTPUT
+        $TACHYON_HOME/bin/tachyon tfs rmr $TACHYON_OUTPUT_DIR/terasort
+        $HADOOP_HOME/bin/hadoop jar $HADOOP_HOME/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.5.2.jar terasort -libjars $TACHYON_HOME/client/target/tachyon-client-0.6.4-jar-with-dependencies.jar $TSORT_FILE $TACHYON_OUTPUT/terasort
     else
         echo "Sorry we do not support this benchmark ("$1")"
     fi
