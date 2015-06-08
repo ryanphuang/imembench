@@ -2,20 +2,19 @@
 
 #TODO: redundancy here
 
-###TODO: export
-HADOOP_HOME=/mnt/hadoop/hadoop-2.5.2
-
 HDFS_MASTER=ccied6.sysnet.ucsd.edu
 
 USER=`whoami`
 PREFIX=/user/$USER/data-MicroBenchmarks
 
-RAW_FILES=$PREFIX/in
-SORT_FILES=$PREFIX/sort-out
-TSORT_FILE=$PREFIX/tsort-file
-HDFS_OUTPUT=$PREFIX/out
-
 HDFS_PREFIX=hdfs://$HDFS_MASTER:9000$PREFIX
+
+RAW_FILES=$HDFS_PREFIX/in
+SORT_FILES=$HDFS_PREFIX/sort-out
+TSORT_FILE=$HDFS_PREFIX/tsort-file
+
+HDFS_OUTPUT=$HDFS_PREFIX/out/mapred/hdfs
+
 
 if [ $# -ne 1 ]
 then
