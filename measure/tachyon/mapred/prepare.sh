@@ -30,3 +30,5 @@ ${HADOOP_HOME}/bin/hadoop fs -rm -r data-MicroBenchmarks/sort-out
 ${HADOOP_HOME}/bin/hadoop fs -mkdir data-MicroBenchmarks/sort-out
 ${HADOOP_HOME}/bin/hadoop jar ${HADOOP_TRACE_HOME}/sort-transfer/ToSeqFile.jar ToSeqFile data-MicroBenchmarks/in data-MicroBenchmarks/sort-out
 
+$HADOOP_HOME/bin/hadoop fs -rm -r data-MicroBenchmarks/tsort-file
+$HADOOP_HOME/bin/hadoop jar ${HADOOP_HOME}/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.5.2.jar teragen 1000000 data-MicroBenchmarks/tsort-file
