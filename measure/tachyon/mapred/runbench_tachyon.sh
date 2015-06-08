@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ###TODO: export
-TACHYON_HOME=/mnt/tachyon/tachyon-0.6.4
+#TACHYON_HOME=/mnt/tachyon/tachyon-0.6.4
 
 TACHYON_MASTER=ccied6.sysnet.ucsd.edu
 
@@ -13,7 +13,7 @@ TACHYON_PREFIX=tachyon://$TACHYON_MASTER:19998$PREFIX
 RAW_FILES=$TACHYON_PREFIX/in
 SORT_FILES=$TACHYON_PREFIX/sort-out
 TSORT_FILE=$TACHYON_PREFIX/tsort-file
-TACHYON_OUTPUT=$TACHYON_PREFIX/out
+TACHYON_OUTPUT=$TACHYON_PREFIX/out/mapred/tachyon
 
 if [ $# -ne 1 ]
 then
