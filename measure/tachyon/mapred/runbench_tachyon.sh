@@ -6,13 +6,13 @@
 TACHYON_MASTER=ccied6.sysnet.ucsd.edu
 
 USER=`whoami`
-PREFIX=/user/$USER/data-MicroBenchmarks
+PREFIX=/user/$USER/ICSBigDataBench
 
 TACHYON_PREFIX=tachyon://$TACHYON_MASTER:19998$PREFIX
 
-RAW_FILES=$TACHYON_PREFIX/in
-SORT_FILES=$TACHYON_PREFIX/sort-out
-TSORT_FILE=$TACHYON_PREFIX/tsort-file
+RAW_FILES=$TACHYON_PREFIX/data-MicroBenchmarks/in
+SORT_FILES=$TACHYON_PREFIX/data-MicroBenchmarks/sort-out
+TSORT_FILE=$TACHYON_PREFIX/data-MicroBenchmarks/tsort-file
 TACHYON_OUTPUT=$TACHYON_PREFIX/out/mapred/tachyon
 
 if [ $# -ne 1 ]

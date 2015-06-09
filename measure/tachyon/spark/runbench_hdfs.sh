@@ -3,13 +3,13 @@
 HDFS_MASTER=ccied6.sysnet.ucsd.edu
 
 USER=`whoami`
-PREFIX=/user/$USER/data-MicroBenchmarks
+PREFIX=/user/$USER/ICSBigDataBench
 
 HDFS_PREFIX=hdfs://$HDFS_MASTER:9000$PREFIX
 
-RAW_FILES=$HDFS_PREFIX/in
-SORT_FILES=$HDFS_PREFIX/sort-out
-TSORT_FILE=$HDFS_PREFIX/tsort-file
+RAW_FILES=$HDFS_PREFIX/data-MicroBenchmarks/in
+SORT_FILES=$HDFS_PREFIX/data-MicroBenchmarks/sort-out
+TSORT_FILE=$HDFS_PREFIX/data-MicroBenchmarks/tsort-file
 
 HDFS_OUTPUT=$HDFS_PREFIX/out/spark/hdfs
 
