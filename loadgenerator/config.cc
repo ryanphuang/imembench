@@ -71,10 +71,14 @@ bool BenchConfigParser::parse(const char *filename)
       if (line.empty() || line[0] == ';')
         continue; // comment or empty line
 
-      pos = line.find(';');
-      if (pos != string::npos) {
-        line = line.substr(0, pos); // ignore chars after ';'
-      }
+     /* in standard INI, ';' means comment only if it's at the beginning of the line
+      * so we shouldn't be more smart about it here.
+      *
+      *  pos = line.find(';');
+      *  if (pos != string::npos) {
+      *    line = line.substr(0, pos); // ignore chars after ';'
+      *  }
+      */
     
       if (line[0] == '[' && line[line.length() - 1] == ']') {
         // it's a section

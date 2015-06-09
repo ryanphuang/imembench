@@ -17,9 +17,9 @@ TachyonDriver gTacDriver("tachyon");
 RedisDriver gRedDriver("redis");
 
 BenchDriverBase *gDrivers[] = {
-  &gRamDriver,
-//  &gTacDriver,
-//  &gRedDriver,
+//  &gRamDriver,
+  &gTacDriver,
+//    &gRedDriver,
 };
 
 size_t gNdriver = sizeof(gDrivers) / sizeof(gDrivers[0]);

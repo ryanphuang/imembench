@@ -22,7 +22,8 @@ bool TachyonDriver::init(ConnectionConfig *config)
     return false;
   }
   const char *kvprefix = config->getKVStorePrefix();
-  m_client = TachyonKV::createKV(client, kvprefix); 
+  m_client = TachyonKV::createKV(client, CACHE, MUST_CACHE, 
+      DEFAULT_KV_BLOCK_BYTES, kvprefix); 
   delete client; // don't need tachyon client any more, only need kvstore
   if (m_client == NULL) {
     fprintf(stderr, "fail to create tachyon kvstore\n");
@@ -49,10 +50,10 @@ void TachyonDriver::reset()
   if (m_initialized && m_client != NULL) {
     const char *kvprefix = m_config->getKVStorePrefix();
     if (strlen(kvprefix) > 0) {
-      // bool ok = m_client->deletePath(kvprefix, true);
-      // if (!ok) {
-      //  fprintf(stderr, "fail to create kvstore directory %s\n", kvprefix);
-      // }
+      bool ok = m_client->getClient()->deletePath(kvprefix, true);
+      if (!ok) {
+        fprintf(stderr, "fail to create kvstore directory %s\n", kvprefix);
+      }
     }
   }
   if (m_config != NULL)

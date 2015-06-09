@@ -186,7 +186,7 @@ writeRandomObjects(BenchDriverBase *driver, uint32_t numObjects, uint16_t keyLen
 //
 void randomRW(BenchDriverBase *driver)
 {
-#define NUM_SIZES 2
+#define NUM_SIZES 1
     int sizes[] = {100, 1000, 10000, 100000, 1000000};
     TimeDist readDists[NUM_SIZES], writeDists[NUM_SIZES];
     const char* ids[] = {"100", "1K", "10K", "100K", "1M"};

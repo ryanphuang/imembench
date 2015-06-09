@@ -90,6 +90,7 @@ class ConnectionConfig {
     const char *getClusterName() { return m_cluster_name.c_str(); }
     const char *getTestTableName() { return m_test_table.c_str(); }
     const char *getKVStorePrefix() { return m_kvstore_prefix.c_str(); }
+
     double getTimeout() { return m_timeout; }
     HostList & getCluster() { return m_cluster; }
 
@@ -105,6 +106,8 @@ class ConnectionConfig {
     std::string m_test_table; // for ramcloud
 
     std::string m_kvstore_prefix; // for tachyon
+    int m_write_type; // for tachyon
+    int m_read_type; // for tachyon
 
     double m_timeout; // for redis
     HostList m_cluster; // for redis
