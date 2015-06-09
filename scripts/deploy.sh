@@ -8,9 +8,8 @@ then
 else
     while read line           
     do
-        echo "copy "$1" to "$line
         path=`dirname $1`/`basename $1`
-        echo $path
+        echo "copy "$path" to "$line
         scp $path "$line":$path
     done <$WORKERLST
 fi

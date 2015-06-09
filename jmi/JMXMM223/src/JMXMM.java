@@ -1,5 +1,10 @@
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.Thread;
+import java.net.InetAddress;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
@@ -18,11 +23,13 @@ public class JMXMM {
   
   private JMXServiceURL JMXUrl = null;
   private long period = -1;
+  private String logfile = null;
   
-  public JMXMM(int port, long period) {
+  public JMXMM(int port, long period, String file) {
     System.setProperty("java.rmi.server.hostname", "localhost");
     this.JMXUrl = getJMXUrl(Integer.toString(port));
     this.period = period;
+    this.logfile = file;
     
     if(JMXUrl == null) {
       //error is printed out in getJMXUrl
@@ -37,20 +44,30 @@ public class JMXMM {
     }
   }
   
-  public static void getContinousMemoryUsages(JMXServiceURL url, long period) {
-    System.out.println("INIT USED COMMITTED MAX");
-    while(true) {
-      try {
-        JMXConnector jmxc = JMXConnectorFactory.connect(url, null);
-        Object o = jmxc.getMBeanServerConnection().getAttribute(new ObjectName("java.lang:type=Memory"), "HeapMemoryUsage");
-        CompositeData cd = (CompositeData) o;
-        System.out.println(cd.get("init") + " " + cd.get("used") + " " + cd.get("committed") + " " + cd.get("max"));
-        
-        Thread.sleep(period);
-        
-      } catch (Exception e) {
-        e.printStackTrace();
+  public static void getContinousMemoryUsages(JMXServiceURL url, long period, String logfile) {
+    try {
+      @SuppressWarnings("resource")
+      PrintWriter pw = new PrintWriter(new FileWriter(logfile));
+      pw.println("INIT USED COMMITTED MAX");
+      
+      while(true) {
+        try {
+          JMXConnector jmxc = JMXConnectorFactory.connect(url, null);
+          Object o = jmxc.getMBeanServerConnection().getAttribute(new ObjectName("java.lang:type=Memory"), "HeapMemoryUsage");
+          CompositeData cd = (CompositeData) o;
+          
+          pw.println(cd.get("init") + " " + cd.get("used") + " " + cd.get("committed") + " " + cd.get("max"));
+          pw.flush();
+          
+          Thread.sleep(period);
+          
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
       }
+      
+    } catch(Exception e) {
+      e.printStackTrace();
     }
   }
   
@@ -66,7 +83,7 @@ public class JMXMM {
   public void run() {
     new Thread() {
       public void run() {
-        JMXMM.getContinousMemoryUsages(JMXUrl, period);
+        JMXMM.getContinousMemoryUsages(JMXUrl, period, logfile);
       }
     }.start();
   }
@@ -88,7 +105,14 @@ public class JMXMM {
       return;
     }
     
-    JMXMM jmxmm = new JMXMM(options.port, options.period*1000);
+    if(options.logfile.length() == 0) {
+      SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+      options.logfile = "mmlog." + InetAddress.getLocalHost().getHostName() + "." + sdf.format(Calendar.getInstance().getTime());
+    }
+    
+    String logpath = (options.logdir.length() == 0) ? options.logfile : options.logdir + "/" + options.logfile;  
+    
+    JMXMM jmxmm = new JMXMM(options.port, options.period*1000, logpath);
     jmxmm.run();
   }
 }
