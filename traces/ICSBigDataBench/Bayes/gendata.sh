@@ -21,11 +21,11 @@ mkdir -p ${WORK_DIR}/data-naivebayes/amazonMR4
 mkdir -p ${WORK_DIR}/data-naivebayes/amazonMR5
 
 cd ../BigDataGeneratorSuite/Text_datagen/
-./gen_text_data.sh amazonMR1 30 150 100 ${WORK_DIR}/data-naivebayes/amazonMR1
-./gen_text_data.sh amazonMR2 30 150 100 ${WORK_DIR}/data-naivebayes/amazonMR2
-./gen_text_data.sh amazonMR3 30 150 100 ${WORK_DIR}/data-naivebayes/amazonMR3
-./gen_text_data.sh amazonMR4 30 150 100 ${WORK_DIR}/data-naivebayes/amazonMR4
-./gen_text_data.sh amazonMR5 30 150 100 ${WORK_DIR}/data-naivebayes/amazonMR5
+./gen_text_data.sh amazonMR1 30 150 1000 ${WORK_DIR}/data-naivebayes/amazonMR1
+./gen_text_data.sh amazonMR2 30 150 1000 ${WORK_DIR}/data-naivebayes/amazonMR2
+./gen_text_data.sh amazonMR3 30 150 1000 ${WORK_DIR}/data-naivebayes/amazonMR3
+./gen_text_data.sh amazonMR4 30 150 1000 ${WORK_DIR}/data-naivebayes/amazonMR4
+./gen_text_data.sh amazonMR5 30 150 1000 ${WORK_DIR}/data-naivebayes/amazonMR5
 
 echo `pwd`
 cd ../../Bayes/data-naivebayes

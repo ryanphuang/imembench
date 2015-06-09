@@ -15,7 +15,7 @@ WORK_DIR=`pwd`
 mkdir $WORK_DIR/data-Connected_Components
 #read -p "Please Enter The Iterations of GenGragh: " I
 
-ITERATION=10000
+ITERATION=20
 
 echo "WORK_DIR=$WORK_DIR data will be generated in $WORK_DIR/data-Connected_Components"
 
