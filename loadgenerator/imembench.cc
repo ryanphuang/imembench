@@ -186,7 +186,7 @@ writeRandomObjects(BenchDriverBase *driver, uint32_t numObjects, uint16_t keyLen
 //
 void randomRW(BenchDriverBase *driver)
 {
-#define NUM_SIZES 5
+#define NUM_SIZES 2
     int sizes[] = {100, 1000, 10000, 100000, 1000000};
     TimeDist readDists[NUM_SIZES], writeDists[NUM_SIZES];
     const char* ids[] = {"100", "1K", "10K", "100K", "1M"};
@@ -206,9 +206,9 @@ void randomRW(BenchDriverBase *driver)
         uint32_t numObjects = 200000000/(size + keyLength + 20);
         fillData(driver, numObjects, keyLength, size);
         readDists[i] = readRandomObjects(driver, numObjects, keyLength,
-                size, 10000, 10.0);
+                size, 10000, 5.0);
         writeDists[i] =  writeRandomObjects(driver, numObjects, keyLength,
-                size, 10000, 10.0);
+                size, 10000, 5.0);
     }
 
     // Print out the results (in a different order):

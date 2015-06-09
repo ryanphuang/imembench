@@ -17,6 +17,7 @@ namespace RAMCloud {
 }
 namespace tachyon {
   class TachyonClient;
+  class TachyonKV;
 }
 class RedisCluster;
 
@@ -93,7 +94,7 @@ class TachyonDriver : public BenchDriverBase {
     void *getClient() { return m_client; }
 
   protected:
-    tachyon::TachyonClient *m_client;
+    tachyon::TachyonKV *m_client;
 };
 
 class RedisDriver : public BenchDriverBase {

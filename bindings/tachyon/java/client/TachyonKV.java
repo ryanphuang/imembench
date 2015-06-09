@@ -17,6 +17,8 @@ package tachyon.client;
 
 import java.io.IOException;
 
+import tachyon.TachyonURI;
+
 import tachyon.client.OutStream;
 import tachyon.client.InStream;
 import tachyon.client.TachyonFile;
@@ -26,14 +28,34 @@ import tachyon.client.ReadType;
 
 public class TachyonKV {
   private static final String KVSTORE_PREFIX = "/jkvstore/";
+
   private TachyonFS mTachyonClient;
+  private String mKVStore;
 
   public TachyonKV(TachyonFS client) {
+    this(client, KVSTORE_PREFIX);
+  }
+
+  public TachyonKV(TachyonFS client, String kvStore) {
     mTachyonClient = client;
+    // must ends with '/'
+    if (kvStore.charAt(kvStore.length() - 1) != '/') {
+      mKVStore = kvStore + '/';
+    } else {
+      mKVStore = kvStore;
+    }
+  }
+
+  public boolean init() {
+    try {
+      return mTachyonClient.mkdir(new TachyonURI(mKVStore));
+    } catch (IOException e) {
+      return false;
+    }
   }
 
   public void write(String key, byte[] value) throws IOException {
-    String filePath = KVSTORE_PREFIX + key;
+    String filePath = mKVStore + key;
     TachyonFile file = mTachyonClient.getFile(filePath);
     if (file != null) {
       if (!mTachyonClient.delete(filePath, false)) {

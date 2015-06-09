@@ -11,6 +11,8 @@
 
 using namespace std;
 
+// #define DEBUG_SLOG
+
 RedisCluster::~RedisCluster()
 {
   RClientConnMap::iterator rit;
@@ -118,8 +120,10 @@ bool RedisCluster::buildSlots()
           const char * host = rele->element[2]->element[0]->str;
           int port = (int) (rele->element[2]->element[1]->integer);
 
+          #ifdef DEBUG_SLOT
           printf("slot [%u-%u] is served by %s:%d\n", 
               slot.start, slot.end, host, port);
+          #endif
 
           redisContext *sc = NULL;
           cit = m_clientconn_map.find(make_pair(host, port));
@@ -141,12 +145,14 @@ bool RedisCluster::buildSlots()
       break;
   }
 
+  #ifdef DEBUG_SLOT
   RClientSlotMap::iterator rsit;
   int i = 0;
   for (rsit = m_clientslot_map.begin(); rsit != m_clientslot_map.end(); ++rsit) {
     printf("slot_map.%d = [%u-%u]\n", i, rsit->first.start, rsit->first.end);
     ++i;
   }
+  #endif
   return found;
 }
 
@@ -172,7 +178,9 @@ redisContext *RedisCluster::getClientForKey(const char *key, uint32_t keylen)
   }
 
   unsigned int slot = HASH_SLOT(key, keylen);
+  #ifdef DEBUG_SLOT
   printf("slot('%s') = %u\n", key, slot);
+  #endif
   RClientSlotMap::iterator it;
   
   it = m_clientslot_map.lower_bound(KeySlot{slot, slot});
@@ -180,12 +188,16 @@ redisContext *RedisCluster::getClientForKey(const char *key, uint32_t keylen)
     --it;
   if (it->first.start <= slot && slot <= it->first.end) {
     redisContext *ctx = it->second;
+    #ifdef DEBUG_SLOT
     printf("slot %u is served by %s:%d [%u-%u]\n", slot, ctx->tcp.host, 
         ctx->tcp.port, it->first.start, it->first.end);
+    #endif
     return ctx;
   } else {
+    #ifdef DEBUG_SLOT
     printf("slot %u is not in near range [%u-%u]\n", slot, it->first.start, 
         it->first.end);
+    #endif
     return NULL;
   }
 }

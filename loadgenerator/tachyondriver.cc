@@ -16,19 +16,29 @@ bool TachyonDriver::init(ConnectionConfig *config)
   int port = config->getPort();
   std::stringstream ss;
   ss << host << ":" << port;
-  m_client = TachyonClient::createClient(ss.str().c_str());
-  if (m_client == NULL) {
+  TachyonClient *client = TachyonClient::createClient(ss.str().c_str());
+  if (client == NULL) {
     fprintf(stderr, "fail to create tachyon client\n");
     return false;
   }
   const char *kvprefix = config->getKVStorePrefix();
-  if (strlen(kvprefix) > 0) {
-    bool ok = m_client->mkdir(kvprefix);
-    if (!ok) {
-      fprintf(stderr, "fail to create kvstore directory %s\n", kvprefix);
-      return false;
-    }
+  m_client = TachyonKV::createKV(client, kvprefix); 
+  delete client; // don't need tachyon client any more, only need kvstore
+  if (m_client == NULL) {
+    fprintf(stderr, "fail to create tachyon kvstore\n");
+    return false;
   }
+  if (!m_client->init()) {
+    fprintf(stderr, "fail to initialize tachyon kvstore\n");
+    return false;
+  }
+  /*
+  bool ok = m_client->mkdir(kvprefix);
+  if (!ok) {
+    fprintf(stderr, "fail to create kvstore directory %s\n", kvprefix);
+    return false;
+  }
+  */
   m_config = config;
   m_initialized = true;
   return true;
@@ -55,6 +65,8 @@ void TachyonDriver::reset()
 inline void TachyonDriver::write(const char *key, uint32_t keylen,
         const char *value, uint32_t valuelen)
 {
+  m_client->set(key, keylen, value, valuelen);
+  /*
   const char *kvprefix = m_config->getKVStorePrefix();
   string s1(kvprefix);
   s1.append(key, keylen);
@@ -77,11 +89,14 @@ inline void TachyonDriver::write(const char *key, uint32_t keylen,
     }
     delete jfile;
   }
+  */
 }
 
 inline int TachyonDriver::read(const char *key, uint32_t keylen, 
         char *buff, uint32_t valuelen)
 {
+  return m_client->get(key, keylen, buff, valuelen);
+  /*
   int sz = -1;
   const char *kvprefix = m_config->getKVStorePrefix();
   string s1(kvprefix);
@@ -97,4 +112,5 @@ inline int TachyonDriver::read(const char *key, uint32_t keylen,
   }
   delete jfile;
   return sz;
+  */
 }
