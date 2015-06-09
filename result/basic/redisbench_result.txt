@@ -1,0 +1,19 @@
+src/redis-benchmark -h XXX -p 7777 -n 1000000 -t set,get
+====== SET ======
+  1000000 requests completed in 13.11 seconds
+  50 parallel clients
+  3 bytes payload
+  keep alive: 1
+
+100.00% <= 0 milliseconds
+76283.47 requests per second
+
+====== GET ======
+  1000000 requests completed in 13.09 seconds
+  50 parallel clients
+  3 bytes payload
+  keep alive: 1
+
+100.00% <= 1 milliseconds
+100.00% <= 1 milliseconds
+76376.69 requests per second

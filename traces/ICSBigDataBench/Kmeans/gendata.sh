@@ -10,7 +10,7 @@
 
 echo "Preparing Kmeans data dir"
 rm -fr data-Kmeans
-./Generating Image_data/color100.txt 10000 > data-Kmeans
+./Generating Image_data/color100.txt 200000 > data-Kmeans
 
 #${HADOOP_HOME}/bin/hadoop fs -rmr /Spark-Kmeans
 #${HADOOP_HOME}/bin/hadoop fs -mkdir /Spark-Kmeans

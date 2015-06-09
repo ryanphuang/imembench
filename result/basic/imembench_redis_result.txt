@@ -1,0 +1,79 @@
+=============================================
+running benchmark 'randomRW' on 'redis'
+write rate for 1000000-byte objects: 0.1 kobjects/sec, 70.4 MB/sec
+read 1000000.000000
+write rate for 100000-byte objects: 0.6 kobjects/sec, 62.3 MB/sec
+read 100000.000000
+write rate for 10000-byte objects: 3.9 kobjects/sec, 39.0 MB/sec
+read 10000.000000
+write rate for 1000-byte objects: 7.4 kobjects/sec, 7.6 MB/sec
+read 1000.000000
+write rate for 100-byte objects: 8.9 kobjects/sec, 1.2 MB/sec
+read 100.000000
+basic.read100        103.4 us     read random 100B object (30B key) median
+basic.read100.min     32.9 us     read random 100B object (30B key) minimum
+basic.read100.9      127.0 us     read random 100B object (30B key) 90%
+basic.read100.99     147.1 us     read random 100B object (30B key) 99%
+basic.read100.999    766.3 us     read random 100B object (30B key) 99.9%
+basic.readBw100        1.0 MB/s   bandwidth reading 100B objects (30B key)
+basic.read1K         156.1 us     read random 1KB object (30B key) median
+basic.read1K.min      42.7 us     read random 1KB object (30B key) minimum
+basic.read1K.9       163.7 us     read random 1KB object (30B key) 90%
+basic.read1K.99      172.1 us     read random 1KB object (30B key) 99%
+basic.read1K.999     212.6 us     read random 1KB object (30B key) 99.9%
+basic.readBw1K         7.8 MB/s   bandwidth reading 1KB objects (30B key)
+basic.read10K        253.9 us     read random 10KB object (30B key) median
+basic.read10K.min     52.5 us     read random 10KB object (30B key) minimum
+basic.read10K.9      262.0 us     read random 10KB object (30B key) 90%
+basic.read10K.99     273.4 us     read random 10KB object (30B key) 99%
+basic.read10K.999    342.3 us     read random 10KB object (30B key) 99.9%
+basic.readBw10K       49.3 MB/s   bandwidth reading 10KB objects (30B key)
+basic.read100K         1.1 ms     read random 100KB object (30B key) median
+basic.read100K.min   121.3 us     read random 100KB object (30B key) minimum
+basic.read100K.9       1.1 ms     read random 100KB object (30B key) 90%
+basic.read100K.99      1.2 ms     read random 100KB object (30B key) 99%
+basic.read100K.999     2.5 ms     read random 100KB object (30B key) 99.9%
+basic.readBw100K     123.7 MB/s   bandwidth reading 100KB objects (30B key)
+basic.read1M           9.2 ms     read random 1MB object (30B key) median
+basic.read1M.min       1.2 ms     read random 1MB object (30B key) minimum
+basic.read1M.9         9.3 ms     read random 1MB object (30B key) 90%
+basic.read1M.99       10.0 ms     read random 1MB object (30B key) 99%
+basic.read1M.999      18.2 ms     read random 1MB object (30B key) 99.9%
+basic.readBw1M       140.0 MB/s   bandwidth reading 1MB objects (30B key)
+basic.write100       126.7 us     write random 100B object (30B key) median
+basic.write100.min    32.7 us     write random 100B object (30B key) minimum
+basic.write100.9     143.2 us     write random 100B object (30B key) 90%
+basic.write100.99    231.1 us     write random 100B object (30B key) 99%
+basic.write100.999     3.0 ms     write random 100B object (30B key) 99.9%
+basic.writeBw100     851.0 KB/s   bandwidth writing 100B objects (30B key)
+basic.write1K        163.1 us     write random 1KB object (30B key) median
+basic.write1K.min     47.0 us     write random 1KB object (30B key) minimum
+basic.write1K.9      172.0 us     write random 1KB object (30B key) 90%
+basic.write1K.99     183.0 us     write random 1KB object (30B key) 99%
+basic.write1K.999    224.5 us     write random 1KB object (30B key) 99.9%
+basic.writeBw1K        7.3 MB/s   bandwidth writing 1KB objects (30B key)
+basic.write10K       286.8 us     write random 10KB object (30B key) median
+basic.write10K.min    61.0 us     write random 10KB object (30B key) minimum
+basic.write10K.9     359.3 us     write random 10KB object (30B key) 90%
+basic.write10K.99    442.1 us     write random 10KB object (30B key) 99%
+basic.write10K.999     4.0 ms     write random 10KB object (30B key) 99.9%
+basic.writeBw10K      37.1 MB/s   bandwidth writing 10KB objects (30B key)
+basic.write100K        1.3 ms     write random 100KB object (30B key) median
+basic.write100K.min  254.9 us     write random 100KB object (30B key) minimum
+basic.write100K.9      2.3 ms     write random 100KB object (30B key) 90%
+basic.write100K.99     6.3 ms     write random 100KB object (30B key) 99%
+basic.write100K.999  103.9 ms     write random 100KB object (30B key) 99.9%
+basic.writeBw100K     56.0 MB/s   bandwidth writing 100KB objects (30B key)
+basic.write1M         13.7 ms     write random 1MB object (30B key) median
+basic.write1M.min      4.0 ms     write random 1MB object (30B key) minimum
+basic.write1M.9       20.8 ms     write random 1MB object (30B key) 90%
+basic.write1M.99     127.1 ms     write random 1MB object (30B key) 99%
+basic.writeBw1M       59.9 MB/s   bandwidth writing 1MB objects (30B key)
+==========================================
+=============================================
+running benchmark 'readIntensive' on 'redis'
+==========================================
+=============================================
+running benchmark 'writeOnly' on 'redis'
+==========================================
+test table 'test' dropped
