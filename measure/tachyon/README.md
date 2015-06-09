@@ -1,4 +1,4 @@
-#Basic Settings
+##Basic Settings
 ###a. Login as `cse223_tixu` 
 (otherwise you may have permission issues)
 
@@ -17,7 +17,7 @@ export TACHYON_HOME=/mnt/tachyon/tachyon-0.6.4/
 cd /mnt/imembench/measure/tachyon
 ```
 
-#Start Tachyon
+##Start/Stop Tachyon
 
 Current, we support the following model of Tachyon cluster
 
@@ -33,7 +33,7 @@ $ ./tachyon_launcher stop-{clean, mm, inst}
 ```
 [NOTE] Make sure you do the `tconf.sh` first before launching any of the models. `tconf.sh` will copy the corresponding scripts, configuration files, and JARs to each node.
 
-#Run workloads
+##Run Workloads
 Therea are two subdirs, `spark` and `mapred` containing the scripts to run the Spark and MapReduce workloads correspondingly. The scripts ars:
 - `mapred/runbench_hdfs.sh` and `mapred/runbench_tachyon.sh`: run ICS benchmarks on `HDFS` and `Tachyon` respectively. You can run the following ones: `wordcount`, `grep`, `sort`, and `terasort`.
 - `spark/runbench_hdfs.sh` and `spark/runbench_tachyon.sh`: run ICS benchmarks on `HDFS` and `Tachyon` respectively. You can run the following ones: `wordcount`, `grep`, `sort`, `bayes`, `kmeans`, and `cc`.
@@ -44,7 +44,7 @@ $ cd spark
 $ ./runbench_tachyon sort     
 ```
 
-#Processes
+##Measurement Process
 Using `mm` as the example, I expect the measurement follows the following process:
 ```
 $ ./tconf.sh mm                      //initialize the configurations for memory monitoring
@@ -54,10 +54,20 @@ $ ./runbench_tachyon wordcount       //running workloads
 $ ./runbench_tachyon sort  
 $ ./runbench_tachyon kmeans  
 $ ......
+$ cd ..
 $ ./tachyon_mgr.sh stop-mm           //stop tachyon and copy all the logs into the local mmlogs and gclogs dirs
 ```
 
-#Other scripts
+##Web Monitors
+`Tachyon`: http://ccied6.sysnet.ucsd.edu:19999/home
+
+`HDFS`: http://ccied6.sysnet.ucsd.edu:50070/dfshealth.html#tab-overview
+
+`YARN`: http://ccied6.sysnet.ucsd.edu:8088/cluster/nodes
+
+`Spark`: http://ccied6.sysnet.ucsd.edu:8080/
+
+##Other Scripts
 
 You will see the following scripts:
 - `sync.sh`: synchronize a file on the current file system to all the workers
@@ -66,7 +76,20 @@ You will see the following scripts:
 
 Note: the ICS BigDataBench is located in `/mnt/imembench/traces/ICSBigDataBench/`, but you should not need to change it.
 
-#About memory utilization logs (`mmlogs`)
+
+##Potential Problems
+
+There could be potential problems:
+- Monitor the memory usage of Tachyon via the web, it's possible that it uses all the memory and the performance will be very very bad. In this case, you may need to clean the memory, you can do this by delete the in-memory files using commands like
+```
+$TACHYON_HOME/bin/tachyon tfs -rm -r XXX
+```
+
+##Mechanisms 
+
+(you don't need to know for running the workloads)
+
+###a. About memory utilization logs (`mmlogs`)
 
 `mmlogs` are collected through the JMX (Java Management Extensions) interface. To enable JMX for `Tachyon`, you need to
 have the following settings
@@ -87,7 +110,7 @@ Every node has a JMI client in ```/mnt/tixu/JMXMM223/```, and there is scripts t
 
 The settings will automatically be copied by `tconf.sh` and the JMX monitors will be started by `tachyon_launcher`.
 
-#About GC logs (gclogs)
+###b. About GC logs (gclogs)
 `gclogs` can be turned on with the following settings:
 ```
 export TACHYON_JAVA_OPTS+="
@@ -105,13 +128,13 @@ AFter starting `Tachyon`, you can find GC logs at `$TACHYON_HOME/gclogs/gclog.wo
 
 The settings will automatically be copied by `tconf.sh` and the JMX monitors will be started by `tachyon_launcher`.
 
-#About memory allocation overhead 
+###c. About memory allocation overhead 
 
-Obtainning memory allocation overhead requires instrumentation of the Tachyon workers so we need to recompile the Tachyon worker code (we use `java-allocation-instrumenter-3.0.jar` to do the instrumentation). Also, you need to change the startup scripts to include a Java agent (the standard way to do instrumentation in Java).
+Obtainning memory allocation overhead requires instrumentation of the Tachyon workers so we need to recompile the Tachyon worker code (we use `java-allocation-instrumenter-3.0.jar` to do the instrumentation). Also, you need to change the startup scripts to include a Java agent (the standard way to do instrumentation in Java using `java.lang.instrument`).
 
 I have prepared an instrumened version of Tachyon JAR and the startup scripts needed. Again, the settings will automatically be copied by `tconf.sh`.
 
-#Start/stop the clusters in normal way
+##Start/Stop Other Components
 If you want to start and stop the cluters, especially the other components like HDFS, YARN, and Spark. You can use the following commands. Make sure you first stop the upper-level systems and stop `HDFS` last (`Tachyon` and `YARN` both are connected to `HDFS`).
 
 ###Start
@@ -128,4 +151,5 @@ $TACHYON_HOME/bin/tachyon-stop.sh
 $HADOOP_HOME/sbin/stop-yarn.sh
 $HADOOP_HOME/sbin/stop-dfs.sh
 ```
+
 
