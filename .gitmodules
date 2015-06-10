@@ -4,3 +4,6 @@
 [submodule "bindings/ramcloud/c++"]
 	path = bindings/ramcloud/c++
 	url = git@github.com:stormspirit/RAMCloud.git
+[submodule "bindings/redis/c++"]
+	path = bindings/redis/c++
+	url = git@github.com:stormspirit/hirediscluster.git
