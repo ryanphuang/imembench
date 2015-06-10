@@ -104,6 +104,9 @@ struct BenchMark {
   void (*run)(BenchDriverBase *driver, const char *traceFile);
 };
 
+extern BenchMark gBenchmarks[];
+extern int gNbench;
+
 void runBenchMarks(BenchDriverBase **drivers, int ndriver, 
       const char **benchnames, int nbench, const char *traceFile);
 

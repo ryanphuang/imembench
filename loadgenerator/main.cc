@@ -17,12 +17,20 @@ const char * program_name;
 
 INIConfigParser gParser;
 
+const char * supported_targets [] = {
+  "ramcloud",
+  "tachyon",
+  "redis",
+  0,
+};
+
 RamCloudDriver gRamDriver("ramcloud");
 TachyonDriver gTacDriver("tachyon");
 RedisDriver gRedDriver("redis");
 
 static struct option long_options[] = {
   {"help",            no_argument,         0,     'h'},
+  {"list",            no_argument,         0,     'l'},
   {"config_file",     required_argument,   0,     'c'},
   {"workload_file",   required_argument,   0,     'w'},
   {"target",          required_argument,   0,     't'},
@@ -75,13 +83,15 @@ void usage()
 {
   printf("\nUsage: %s [OPTIONS] [tachyon|ramcloud|redis|all] \n\n", program_name);
   printf("  OPTION\n");
+  printf("\t-l, --list                   list available benchmarks and supported targets.\n");
   printf("\t-c, --config_file            configuration file (default imembench.ini) for the benchmark\n");
   printf("\t-w, --workload_file          workload trace file to use instead of the default benchmark\n");
   printf("\t-b, --benchmark              comma-separated list of benchmarks to run on the target systems\n");
   printf("\t-t, --target                 comma-separated list of target system to evaluate\n");
   printf("\n");
   printf("  EXAMPLE\n");
-  printf("\t%s -c imembench.ini --workload_file trace.ycsb --benchmark readonly --target redis,ramcloud\n\n", program_name);
+  printf("\t%s -c imembench.ini --benchmark randomRW redis\n", program_name);
+  printf("\t%s -c imembench.ini --workload_file trace.ycsb --benchmark ycsbReplay --target redis,ramcloud\n\n", program_name);
 }
 
 void setupRamCloudDriver()
@@ -177,9 +187,9 @@ int main(int argc, char ** argv)
   std::vector<std::string> benchV;
   std::vector<std::string>::iterator vit;
 
-  int c;
+  int i, c;
   int option_index;
-  while ((c = getopt_long(argc, argv, "c:w:b:t:h", long_options, &option_index)) != -1) {
+  while ((c = getopt_long(argc, argv, "c:w:b:t:hl", long_options, &option_index)) != -1) {
     switch (c) {
       case 'c': 
         configFile = optarg;
@@ -197,6 +207,18 @@ int main(int argc, char ** argv)
         usage();
         exit(0);
         break;
+      case 'l':
+        printf("Supported targets:\n");
+        i = 0;
+        while (supported_targets[i] != NULL) {
+          printf("%s\n", supported_targets[i]);
+          i++;
+        }
+        printf("\nSupported benchmarks:\n");
+        for (i = 0; i < gNbench; i++) {
+          printf("%s\n", gBenchmarks[i].name);
+        }
+        exit(0);
       case '?':
       default:
         usage();
