@@ -60,6 +60,9 @@ struct BenchMark {
   void (*run)(BenchDriverBase *driver);
 };
 
+void runBenchMarks(BenchDriverBase **drivers, int ndriver, 
+      const char **benchnames, int nbench);
+
 ////////////////////////////////////////////
 // Benchmark drivers for ramcloud, tachyon,
 // redis, etc.
@@ -114,12 +117,6 @@ class RedisDriver : public BenchDriverBase {
   protected:
     rediscluster::RedisCluster *m_client;
 };
-
-void runBenchMarks(BenchDriverBase **drivers, int ndriver, 
-      BenchMark benchmarks[], int nbench);
-
-extern BenchMark gBenchmarks[];
-extern int gNbench;
 
 #endif /* __IMEMBENCH_H_ */
 

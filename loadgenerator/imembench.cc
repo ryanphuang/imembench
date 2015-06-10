@@ -396,17 +396,42 @@ printBandwidth(const char* name, double bandwidth, const char* description)
 }
 
 void runBenchMarks(BenchDriverBase **drivers, int ndriver, 
-      BenchMark benchmarks[], int nbench)
+      const char **benchnames, int nbench)
 {
-  size_t i, j;
-  for (i = 0; i < ndriver; ++i) {
-    BenchDriverBase *driver = drivers[i];
-    for (j = 0; j < gNbench; ++j) {
-      BenchMark bench = benchmarks[j];
-      printf("=============================================\n");
-      printf("running benchmark '%s' on '%s'\n", bench.name, driver->getName());
-      bench.run(driver);
-      printf("==========================================\n");
+  int i, j, k;
+  // test if bennames are valid first!
+  for (j = 0; j < nbench; ++j) {
+    for (k = 0; k < gNbench; ++k) {
+      if (strcmp(gBenchmarks[k].name, benchnames[j]) == 0
+          || strcmp("all", benchnames[j]) == 0) {
+        break;
+      }
+    }
+    if (k >= gNbench) {
+      fprintf(stderr, "Error: cannot find benchmark '%s'\n", benchnames[j]);
+      return;
     }
   }
+  bool *benchrun = new bool[gNbench];
+  for (i = 0; i < ndriver; ++i) {
+    BenchDriverBase *driver = drivers[i];
+    memset(benchrun, 0, gNbench * sizeof(bool));
+    for (j = 0; j < nbench; ++j) {
+      for (k = 0; k < gNbench; ++k) {
+        if (strcmp(gBenchmarks[k].name, benchnames[j]) == 0
+            || strcmp("all", benchnames[j]) == 0) {
+          if (!benchrun[k]) {
+            BenchMark *bench = &gBenchmarks[k];
+            printf("=============================================\n");
+            printf("running benchmark '%s' on '%s'\n", bench->name, driver->getName());
+            bench->run(driver);
+            printf("==========================================\n");
+            benchrun[k] = true;
+          }
+          break;
+        }
+      }
+    }
+  }
+  delete []benchrun;
 }

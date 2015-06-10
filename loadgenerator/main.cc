@@ -10,6 +10,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <string>
+#include <vector>
 #include <sstream>
 
 const char * program_name;
@@ -154,13 +155,27 @@ void setupRedisDriver()
   printf("========================================================\n");
 }
 
+
+void parse_list(const char *str, std::vector<std::string> & result)
+{
+  std::istringstream iss(str);
+  std::string part;
+  while (getline(iss, part, ',')) {
+    result.push_back(part);
+  }
+}
+
+
 int main(int argc, char ** argv)
 {
   program_name = argv[0];
   const char *configFile = "imembench.ini";
   const char *workloadFile = NULL;
-  const char *benchmarks = "all";
-  const char *targetSystem = "all";
+  const char *benchList = "all";
+  const char *targetList = "all";
+  std::vector<std::string> targetV;
+  std::vector<std::string> benchV;
+  std::vector<std::string>::iterator vit;
 
   int c;
   int option_index;
@@ -173,10 +188,10 @@ int main(int argc, char ** argv)
         workloadFile = optarg;
         break;
       case 'b':
-        benchmarks = optarg;
+        benchList = optarg;
         break;
       case 't':
-        targetSystem = optarg;
+        targetList = optarg;
         break;
       case 'h':
         usage();
@@ -189,7 +204,7 @@ int main(int argc, char ** argv)
     }
   }
   if (optind < argc) {
-    targetSystem = argv[optind];
+    targetList = argv[optind];
   }
 
   struct stat st;
@@ -204,28 +219,26 @@ int main(int argc, char ** argv)
     exit(1);
   }
   testConfigs(configFile);
-
-  std::istringstream iss(targetSystem);
-  std::string target;
+  parse_list(targetList, targetV);
   bool all = false, ramcloud = false, tachyon = false, redis = false;
   int targets = 0;
-  while (getline(iss, target, ',')) {
-    if (target.compare("all") == 0) {
+  for (vit = targetV.begin(); vit != targetV.end(); ++vit) {
+    if (vit->compare("all") == 0) {
       all = true;
       targets = 3;
       break;
     }
-    if (target.compare("ramcloud") == 0) {
+    if (vit->compare("ramcloud") == 0) {
       if (!ramcloud) {
         targets++;
         ramcloud = true;
       }
-    } else if (target.compare("tachyon") == 0) {
+    } else if (vit->compare("tachyon") == 0) {
       if (!tachyon) {
         targets++;
         tachyon = true;
       }
-    } else if (target.compare("redis") == 0) {
+    } else if (vit->compare("redis") == 0) {
       if (!redis) {
         targets++;
         redis = true;
@@ -236,8 +249,7 @@ int main(int argc, char ** argv)
     printf("no targets specified for benchmarks, exit\n");
     exit(0);
   }
-
-  printf("%d targets specified for benchmarks: %s\n", targets, targetSystem);
+  printf("%d targets specified for benchmarks: %s\n", targets, targetList);
 
   BenchDriverBase **drivers = new BenchDriverBase *[targets];
   int ndriver = 0;
@@ -253,6 +265,22 @@ int main(int argc, char ** argv)
     setupRedisDriver();
     drivers[ndriver++] = &gRedDriver;
   }
-  runBenchMarks(drivers, ndriver, gBenchmarks, gNbench);
+
+  parse_list(benchList, benchV);
+  const char **benchnames;
+  int nbench;
+  if (benchV.size() == 0) {
+    printf("no benchmarks specified\n");
+    exit(0);
+  } 
+
+  printf("%d benchmarks specified: %s\n", (int) benchV.size(), benchList);
+  nbench = 0;
+  benchnames = new const char *[benchV.size()];
+  for (vit = benchV.begin(); vit != benchV.end(); ++vit) {
+    benchnames[nbench++] = vit->c_str();
+  }
+  
+  runBenchMarks(drivers, ndriver, benchnames, nbench);
   return 0;
 }
