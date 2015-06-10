@@ -119,6 +119,8 @@ void fillData(BenchDriverBase *driver, int numObjects, uint16_t keyLength, uint3
         writeTime += RAMCloud::Cycles::rdtsc() - start;
     }
     double rate = numObjects/RAMCloud::Cycles::toSeconds(writeTime);
+    printf("total objects written = %d\n", numObjects);
+    printf("total bytes written = %u\n", numObjects * (keyLength+valueLength));
     printf("write rate for %d-byte objects: %.1f kobjects/sec,"
           " %.1f MB/sec\n", valueLength, rate/1e03, rate*(keyLength+valueLength)/1e06);
 }
@@ -172,11 +174,12 @@ readRandomObjects(BenchDriverBase *driver, uint32_t numObjects, uint16_t keyLeng
         total += interval;
         times.at(i) = interval;
     }
-    printf("read %lf\n", totalBytes);
+    printf("read = %lf\n", totalBytes);
     TimeDist result;
     getDist(times, &result);
     totalBytes *= RAMCloud::downCast<int>(times.size());
     result.bandwidth = (double) totalBytes/RAMCloud::Cycles::toSeconds(total);
+    printf("total bytes = %lf\n", totalBytes);
     return result;
 }
 
@@ -234,7 +237,7 @@ writeRandomObjects(BenchDriverBase *driver, uint32_t numObjects, uint16_t keyLen
     double totalBytes = valueLength;
     totalBytes *= RAMCloud::downCast<int>(times.size());
     result.bandwidth = totalBytes/RAMCloud::Cycles::toSeconds(total);
-
+    printf("write total bytes = %lf\n", totalBytes);
     return result;
 }
 
@@ -252,24 +255,68 @@ void ycsbReplay(BenchDriverBase *driver, const char *traceFile)
   struct TraceLog log;
   uint32_t maxValueLength = 100000;
   char value[maxValueLength];
+
+  uint64_t total = 0;
+  std::vector<uint64_t> times;
+  double totalBytes = 0;
   while (parser.nextLog(&log)) {
+    bool ok = true;
+    uint64_t start, interval;
     switch (log.op) {
       case T_OP_GET:
+        start = RAMCloud::Cycles::rdtsc();
         driver->read(log.key, (uint32_t) strlen(log.key), value, maxValueLength);
-        printf("GET %s = %s\n", log.key, value);
+        interval = RAMCloud::Cycles::rdtsc() - start;
+        totalBytes += (uint32_t) strlen(value);
+        // printf("GET %s = %s\n", log.key, value);
         break;
       case T_OP_UPDATE:
+        start = RAMCloud::Cycles::rdtsc();
         driver->write(log.key, (uint32_t) strlen(log.key), log.value, (uint32_t) strlen(log.value));
-        printf("PUT %s = %s\n", log.key, log.value);
+        interval = RAMCloud::Cycles::rdtsc() - start;
+        totalBytes += (uint32_t) strlen(log.value);
+        // printf("PUT %s = %s\n", log.key, log.value);
         break;
       case T_OP_DELETE:
+        start = RAMCloud::Cycles::rdtsc();
         driver->write(log.key, (uint32_t) strlen(log.key), "", 0);
-        printf("DEL %s\n", log.key);
+        interval = RAMCloud::Cycles::rdtsc() - start;
+        // printf("DEL %s\n", log.key);
         break;
       default:
-        printf("UNKNOWN: ");
+        fprintf(stderr, "UNKNOWN log\n");
+        ok = false;
     }
+    if (!ok) {
+      continue;
+    }
+    total += interval;
+    times.push_back(interval);
   }
+
+  printf("total bytes = %lf\n", totalBytes);
+  TimeDist dist;
+  getDist(times, &dist);
+  dist.bandwidth = totalBytes / RAMCloud::Cycles::toSeconds(total);
+
+  const char *name = "YCSB";
+  const char *description = "simple get/put workload";
+
+  printf("%-20s %s     %s median\n", name, formatTime(dist.p50).c_str(),
+          description);
+  printf("%-20s %s     %s minimum\n", name, formatTime(dist.min).c_str(),
+          description);
+  printf("%-20s %s     %s 90%%\n", name, formatTime(dist.p90).c_str(),
+          description);
+  if (dist.p99 != 0) {
+      printf("%-20s %s     %s 99%%\n", name,
+              formatTime(dist.p99).c_str(), description);
+  }
+  if (dist.p999 != 0) {
+      printf("%-20s %s     %s 99.9%%\n", name,
+              formatTime(dist.p999).c_str(), description);
+  }
+  printBandwidth(name, dist.bandwidth, "bandwidth");
 }
 
 
@@ -511,10 +558,10 @@ void runBenchMarks(BenchDriverBase **drivers, int ndriver,
             || strcmp("all", benchnames[j]) == 0) {
           if (!benchrun[k]) {
             BenchMark *bench = &gBenchmarks[k];
-            printf("=============================================\n");
+            printf("========================================================\n");
             printf("running benchmark '%s' on '%s'\n", bench->name, driver->getName());
             bench->run(driver, traceFile);
-            printf("==========================================\n");
+            printf("========================================================\n");
             benchrun[k] = true;
           }
           break;
