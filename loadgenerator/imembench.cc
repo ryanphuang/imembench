@@ -51,7 +51,6 @@ BenchMark gBenchmarks[] = {
 
 int gNbench = sizeof(gBenchmarks) / sizeof(gBenchmarks[0]);
 
-
 bool YCSBTraceParser::nextLog(TraceLog *log)
 {
   if (log == NULL) {
@@ -67,11 +66,11 @@ bool YCSBTraceParser::nextLog(TraceLog *log)
       return false;
     }
     size_t max_len = p - start;
-    if (strncmp(start, "UPDATE", max_len)) {
+    if (strncmp(start, "UPDATE", max_len) == 0) {
       log->op = T_OP_UPDATE;
-    } else if (strncmp(start, "GET", max_len)) {
+    } else if (strncmp(start, "GET", max_len) == 0) {
       log->op = T_OP_GET;
-    } else if (strncmp(start, "DELETE", max_len)) {
+    } else if (strncmp(start, "DELETE", max_len) == 0) {
       log->op = T_OP_DELETE;
     } else {
       fprintf(stderr, "invalid operation in trace log: %s\n", line.c_str());
@@ -82,12 +81,14 @@ bool YCSBTraceParser::nextLog(TraceLog *log)
     while (*p != '\0' && *p != '|') p++;
     max_len = p - start;
     strncpy(log->key, start, max_len);
+    log->key[max_len] = '\0'; // need to pad '\0'
     if (*p == '\0') {
       if (log->op == T_OP_UPDATE) {
         // update needs a value
         fprintf(stderr, "update operation in trace log missing value: %s\n", line.c_str());
         return false;
       }
+      strcpy(log->value, ""); // should clear the value!
       return true;
     }
     ++p;
@@ -239,7 +240,36 @@ writeRandomObjects(BenchDriverBase *driver, uint32_t numObjects, uint16_t keyLen
 
 void ycsbReplay(BenchDriverBase *driver, const char *traceFile)
 {
-
+  if (traceFile == NULL) {
+    fprintf(stderr, "no trace file specified for ycsbReplay\n");
+    return;
+  }
+  YCSBTraceParser parser;
+  if (!parser.init(traceFile)) {
+    fprintf(stderr, "fail to init trace file '%s' for ycsbReplay\n", traceFile);
+    return;
+  }
+  struct TraceLog log;
+  uint32_t maxValueLength = 100000;
+  char value[maxValueLength];
+  while (parser.nextLog(&log)) {
+    switch (log.op) {
+      case T_OP_GET:
+        driver->read(log.key, (uint32_t) strlen(log.key), value, maxValueLength);
+        printf("GET %s = %s\n", log.key, value);
+        break;
+      case T_OP_UPDATE:
+        driver->write(log.key, (uint32_t) strlen(log.key), log.value, (uint32_t) strlen(log.value));
+        printf("PUT %s = %s\n", log.key, log.value);
+        break;
+      case T_OP_DELETE:
+        driver->write(log.key, (uint32_t) strlen(log.key), "", 0);
+        printf("DEL %s\n", log.key);
+        break;
+      default:
+        printf("UNKNOWN: ");
+    }
+  }
 }
 
 
