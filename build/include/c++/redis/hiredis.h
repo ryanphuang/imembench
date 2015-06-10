@@ -1,1 +1,1 @@
-../../../../bindings/redis/c/hiredis.h
+../../../../bindings/redis/c++/hiredis/hiredis.h

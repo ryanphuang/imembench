@@ -1,1 +1,1 @@
-../../../../bindings/redis/c/dict.h
+../../../../bindings/redis/c++/hiredis/dict.h

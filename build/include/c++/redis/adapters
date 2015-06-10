@@ -1,1 +1,1 @@
-../../../../bindings/redis/c/adapters
+../../../../bindings/redis/c++/hiredis/adapters
