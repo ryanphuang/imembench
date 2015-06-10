@@ -14,7 +14,30 @@ after clone the main repository, run `git submodule update --init --recursive` t
 pull the git submodules for building.
 
 ## build instruction:
-TBA
+* Build dependencies: 
+  - RAMCloud: at project root, `cd bindings/ramcloud/c++ && make`
+  - Redis: at project root, `cd bindings/redis/c++/hiredis && make`
+  - Tachyon: no need, already compiled jar file in `bindings/tachyon/java/client`
+
+* Build imembench:
+  - `cd loadgenerator && make`
+
+## use benchmark
+`source env.sh`
+
+```
+Usage: ./imembench [OPTIONS] [tachyon|ramcloud|redis|all]
+
+  OPTION
+        -c, --config_file            configuration file (default imembench.ini) for the benchmark
+        -w, --workload_file          workload trace file to use instead of the default benchmark
+        -b, --benchmark              comma-separated list of benchmarks to run on the target systems
+        -t, --target                 comma-separated list of target system to evaluate
+
+  EXAMPLE
+        ./imembench -c imembench.ini redis
+        ./imembench -c imembench.ini --workload_file trace.ycsb --benchmark readonly --target redis,ramcloud
+```
 
 ## existing interfaces:
 - RAMCloud:
