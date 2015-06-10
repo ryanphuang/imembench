@@ -33,20 +33,73 @@ struct TimeDist {
                                   // if no such measurement.
 };
 
-void randomRW(BenchDriverBase *driver);
-void readIntensive(BenchDriverBase *driver);
-void writeOnly(BenchDriverBase *driver);
+void randomRW(BenchDriverBase *driver, const char *traceFile);
+void ycsbReplay(BenchDriverBase *driver, const char *traceFile);
+void readIntensive(BenchDriverBase *driver, const char *traceFile);
+void writeOnly(BenchDriverBase *driver, const char *traceFile);
+
 void getDist(std::vector<uint64_t>& times, TimeDist* dist);
 std::string formatTime(double seconds);
 void printBandwidth(const char* name, double bandwidth, const char* description);
 
 BenchMark gBenchmarks[] = {
+  {"ycsbReplay", ycsbReplay},
   {"randomRW", randomRW},
   {"readIntensive", readIntensive},
   {"writeOnly", writeOnly},
 };
 
 int gNbench = sizeof(gBenchmarks) / sizeof(gBenchmarks[0]);
+
+
+bool YCSBTraceParser::nextLog(TraceLog *log)
+{
+  if (log == NULL) {
+    return false;
+  }
+  std::string line;
+  if (std::getline(m_ifs, line)) {
+    const char *p = line.c_str();
+    const char *start = p;
+    while (*p != '\0' && *p != '|') p++;
+    if (*p == '\0') {
+      fprintf(stderr, "invalid trace log: %s\n", line.c_str());
+      return false;
+    }
+    size_t max_len = p - start;
+    if (strncmp(start, "UPDATE", max_len)) {
+      log->op = T_OP_UPDATE;
+    } else if (strncmp(start, "GET", max_len)) {
+      log->op = T_OP_GET;
+    } else if (strncmp(start, "DELETE", max_len)) {
+      log->op = T_OP_DELETE;
+    } else {
+      fprintf(stderr, "invalid operation in trace log: %s\n", line.c_str());
+      return false;
+    }
+    ++p;
+    start = p;
+    while (*p != '\0' && *p != '|') p++;
+    max_len = p - start;
+    strncpy(log->key, start, max_len);
+    if (*p == '\0') {
+      if (log->op == T_OP_UPDATE) {
+        // update needs a value
+        fprintf(stderr, "update operation in trace log missing value: %s\n", line.c_str());
+        return false;
+      }
+      return true;
+    }
+    ++p;
+    strcpy(log->value, p);
+    return true;
+  } else {
+    if (m_ifs.is_open()) {
+      m_ifs.close();
+    }
+    return false;
+  }
+}
 
 void fillData(BenchDriverBase *driver, int numObjects, uint16_t keyLength, uint32_t valueLength)
 {
@@ -184,9 +237,15 @@ writeRandomObjects(BenchDriverBase *driver, uint32_t numObjects, uint16_t keyLen
     return result;
 }
 
+void ycsbReplay(BenchDriverBase *driver, const char *traceFile)
+{
+
+}
+
+
 // Modified from RAMCloud
 //
-void randomRW(BenchDriverBase *driver)
+void randomRW(BenchDriverBase *driver, const char *traceFile)
 {
 #define NUM_SIZES 1
     int sizes[] = {100, 1000, 10000, 100000, 1000000};
@@ -273,12 +332,12 @@ void randomRW(BenchDriverBase *driver)
     }
 }
 
-void readIntensive(BenchDriverBase *driver)
+void readIntensive(BenchDriverBase *driver, const char *traceFile)
 {
 
 }
 
-void writeOnly(BenchDriverBase *driver)
+void writeOnly(BenchDriverBase *driver, const char *traceFile)
 {
 
 
@@ -396,7 +455,7 @@ printBandwidth(const char* name, double bandwidth, const char* description)
 }
 
 void runBenchMarks(BenchDriverBase **drivers, int ndriver, 
-      const char **benchnames, int nbench)
+      const char **benchnames, int nbench, const char *traceFile)
 {
   int i, j, k;
   // test if bennames are valid first!
@@ -424,7 +483,7 @@ void runBenchMarks(BenchDriverBase **drivers, int ndriver,
             BenchMark *bench = &gBenchmarks[k];
             printf("=============================================\n");
             printf("running benchmark '%s' on '%s'\n", bench->name, driver->getName());
-            bench->run(driver);
+            bench->run(driver, traceFile);
             printf("==========================================\n");
             benchrun[k] = true;
           }

@@ -3,6 +3,8 @@
 
 #include <cstdlib>
 #include <string>
+#include <iostream>
+#include <fstream>
 #include <sstream>
 #include <vector>
 #include <map>
@@ -54,14 +56,56 @@ class BenchDriverBase {
     // void *m_client;
 };
 
+enum TraceOp {
+  T_OP_GET,
+  T_OP_UPDATE,
+  T_OP_DELETE,
+};
+
+#define MAX_TRACE_KEY        128
+#define MAX_TRACE_VALUE      1000000
+
+struct TraceLog {
+  TraceOp op;
+  char key[MAX_TRACE_KEY];
+  char value[MAX_TRACE_VALUE];
+};
+
+class TraceLogParser {
+  public:
+    virtual bool init(const char *traceFile)
+    {
+      m_ifs.open(traceFile, std::ifstream::in);
+      return m_ifs.is_open();
+    }
+
+    virtual bool nextLog(TraceLog *log) = 0;
+
+    virtual void done()
+    {
+      if (m_ifs.is_open()) {
+        m_ifs.close();
+      }
+    }
+
+  protected:
+    std::ifstream m_ifs;
+};
+
+class YCSBTraceParser : public TraceLogParser 
+{
+  public:
+    bool nextLog(TraceLog *log); 
+};
+
 // represents each type of benchmark
 struct BenchMark {
-  const char*name;
-  void (*run)(BenchDriverBase *driver);
+  const char *name;
+  void (*run)(BenchDriverBase *driver, const char *traceFile);
 };
 
 void runBenchMarks(BenchDriverBase **drivers, int ndriver, 
-      const char **benchnames, int nbench);
+      const char **benchnames, int nbench, const char *traceFile);
 
 ////////////////////////////////////////////
 // Benchmark drivers for ramcloud, tachyon,

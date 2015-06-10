@@ -280,7 +280,6 @@ int main(int argc, char ** argv)
   for (vit = benchV.begin(); vit != benchV.end(); ++vit) {
     benchnames[nbench++] = vit->c_str();
   }
-  
-  runBenchMarks(drivers, ndriver, benchnames, nbench);
+  runBenchMarks(drivers, ndriver, benchnames, nbench, workloadFile);
   return 0;
 }
