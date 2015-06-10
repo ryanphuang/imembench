@@ -31,12 +31,16 @@ public class TachyonKV {
 
   private TachyonFS mTachyonClient;
   private String mKVStore;
+  private ReadType mReadType;
+  private WriteType mWriteType;
+  private long mBlockSizeByte;
 
-  public TachyonKV(TachyonFS client) {
-    this(client, KVSTORE_PREFIX);
+  public TachyonKV(TachyonFS client, ReadType readType, WriteType writeType, long blockSizeByte) {
+    this(client, readType, writeType, blockSizeByte, KVSTORE_PREFIX);
   }
 
-  public TachyonKV(TachyonFS client, String kvStore) {
+  public TachyonKV(TachyonFS client, ReadType readType, WriteType writeType, 
+        long blockSizeByte, String kvStore) {
     mTachyonClient = client;
     // must ends with '/'
     if (kvStore.charAt(kvStore.length() - 1) != '/') {
@@ -44,6 +48,9 @@ public class TachyonKV {
     } else {
       mKVStore = kvStore;
     }
+    mReadType = readType;
+    mWriteType = writeType;
+    mBlockSizeByte = blockSizeByte;
   }
 
   public boolean init() {
@@ -62,12 +69,12 @@ public class TachyonKV {
         System.out.println("fail to delete existing " + filePath);
       }
     }
-    int fid = mTachyonClient.createFile(filePath);
+    int fid = mTachyonClient.createFile(new TachyonURI(filePath), mBlockSizeByte);
     if (fid > 0) {
       file = mTachyonClient.getFile(fid);
     }
     if (file != null) {
-      OutStream os = file.getOutStream(WriteType.MUST_CACHE);
+      OutStream os = file.getOutStream(mWriteType);
       if (os != null) {
         os.write(value);
         os.close();
@@ -77,14 +84,16 @@ public class TachyonKV {
 
   public int read(String key, byte[] value) throws IOException {
     int sz = -1;
-    String filePath = KVSTORE_PREFIX + key;
+    String filePath = mKVStore + key;
     TachyonFile file = mTachyonClient.getFile(filePath);
     if (file == null) {
+      System.out.println("fail to get file " + filePath);
       return sz;
     }
-    InStream is = file.getInStream(ReadType.CACHE);
+    InStream is = file.getInStream(mReadType);
     if (is != null) {
       sz = is.read(value);
+      System.out.println("read " + sz);
       is.close();
     }
     return sz;
