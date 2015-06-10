@@ -46,7 +46,7 @@ BenchMark gBenchmarks[] = {
   {"writeOnly", writeOnly},
 };
 
-size_t gNbench = sizeof(gBenchmarks) / sizeof(gBenchmarks[0]);
+int gNbench = sizeof(gBenchmarks) / sizeof(gBenchmarks[0]);
 
 void fillData(BenchDriverBase *driver, int numObjects, uint16_t keyLength, uint32_t valueLength)
 {
@@ -395,13 +395,14 @@ printBandwidth(const char* name, double bandwidth, const char* description)
     printf("  %s\n", description);
 }
 
-void runBenchMarks()
+void runBenchMarks(BenchDriverBase **drivers, int ndriver, 
+      BenchMark benchmarks[], int nbench)
 {
   size_t i, j;
-  for (i = 0; i < gNdriver; ++i) {
-    BenchDriverBase *driver = gDrivers[i];
+  for (i = 0; i < ndriver; ++i) {
+    BenchDriverBase *driver = drivers[i];
     for (j = 0; j < gNbench; ++j) {
-      BenchMark bench = gBenchmarks[j];
+      BenchMark bench = benchmarks[j];
       printf("=============================================\n");
       printf("running benchmark '%s' on '%s'\n", bench.name, driver->getName());
       bench.run(driver);

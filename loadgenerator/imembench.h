@@ -115,12 +115,11 @@ class RedisDriver : public BenchDriverBase {
     rediscluster::RedisCluster *m_client;
 };
 
-void runBenchMarks();
+void runBenchMarks(BenchDriverBase **drivers, int ndriver, 
+      BenchMark benchmarks[], int nbench);
 
 extern BenchMark gBenchmarks[];
-extern size_t gNbench;
-extern BenchDriverBase *gDrivers[];
-extern size_t gNdriver;
+extern int gNbench;
 
 #endif /* __IMEMBENCH_H_ */
 

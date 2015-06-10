@@ -5,9 +5,12 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <getopt.h>
+#include <unistd.h>
+#include <string.h>
+#include <sys/stat.h>
 #include <string>
 #include <sstream>
-#include <sys/stat.h>
 
 const char * program_name;
 
@@ -17,13 +20,14 @@ RamCloudDriver gRamDriver("ramcloud");
 TachyonDriver gTacDriver("tachyon");
 RedisDriver gRedDriver("redis");
 
-BenchDriverBase *gDrivers[] = {
-//  &gRamDriver,
-  &gTacDriver,
-//    &gRedDriver,
+static struct option long_options[] = {
+  {"help",            no_argument,         0,     'h'},
+  {"config_file",     required_argument,   0,     'c'},
+  {"workload_file",   required_argument,   0,     'w'},
+  {"target",          required_argument,   0,     't'},
+  {"benchmark",       required_argument,   0,     'b'},
+  {0,  0,  0,  0},
 };
-
-size_t gNdriver = sizeof(gDrivers) / sizeof(gDrivers[0]);
 
 void testConfigs(const char *configfile)
 {
@@ -42,6 +46,7 @@ void testConfigs(const char *configfile)
     for (cit = configs->begin(); cit != configs->end(); ++cit) {
       printf("%s=%s\n", cit->first.c_str(), cit->second.c_str());
     }
+    printf("\n");
   }
   printf("--------------------------------------------------------\n");
   RAMCloudBenchConfig * rcconf = RAMCloudBenchConfig::fromINI(parser.getConfigs());
@@ -67,7 +72,15 @@ void testConfigs(const char *configfile)
 
 void usage() 
 {
-  fprintf(stderr, "\n\tUsage: %s configfile\n\n", program_name);
+  printf("\nUsage: %s [OPTIONS] [tachyon|ramcloud|redis|all] \n\n", program_name);
+  printf("  OPTION\n");
+  printf("\t-c, --config_file            configuration file (default imembench.ini) for the benchmark\n");
+  printf("\t-w, --workload_file          workload trace file to use instead of the default benchmark\n");
+  printf("\t-b, --benchmark              comma-separated list of benchmarks to run on the target systems\n");
+  printf("\t-t, --target                 comma-separated list of target system to evaluate\n");
+  printf("\n");
+  printf("  EXAMPLE\n");
+  printf("\t%s -c imembench.ini --workload_file trace.ycsb --benchmark readonly --target redis,ramcloud\n\n", program_name);
 }
 
 void setupRamCloudDriver()
@@ -144,27 +157,102 @@ void setupRedisDriver()
 int main(int argc, char ** argv)
 {
   program_name = argv[0];
-  if (argc != 2) {
-    usage();
+  const char *configFile = "imembench.ini";
+  const char *workloadFile = NULL;
+  const char *benchmarks = "all";
+  const char *targetSystem = "all";
+
+  int c;
+  int option_index;
+  while ((c = getopt_long(argc, argv, "c:w:b:t:h", long_options, &option_index)) != -1) {
+    switch (c) {
+      case 'c': 
+        configFile = optarg;
+        break;
+      case 'w':
+        workloadFile = optarg;
+        break;
+      case 'b':
+        benchmarks = optarg;
+        break;
+      case 't':
+        targetSystem = optarg;
+        break;
+      case 'h':
+        usage();
+        exit(0);
+        break;
+      case '?':
+      default:
+        usage();
+        exit(1);
+    }
+  }
+  if (optind < argc) {
+    targetSystem = argv[optind];
+  }
+
+  struct stat st;
+  if (stat(configFile, &st) != 0) {
+    fprintf(stderr, "configuration file '%s' does not exist\n", configFile);
     exit(1);
   }
   bool ok;
-  const char *configfile;
-  configfile  = argv[1];
-  struct stat st;
-  if (stat(configfile, &st) != 0) {
-    fprintf(stderr, "configuration file '%s' does not exist\n", configfile);
-    exit(1);
-  }
-  ok = gParser.parse(configfile);
+  ok = gParser.parse(configFile);
   if (!ok) {
-    fprintf(stderr, "Error: invalid configuration file\n");
+    fprintf(stderr, "Error: invalid configuration file '%s'\n", configFile);
     exit(1);
   }
-  // testConfigs(configfile);
-  // setupRamCloudDriver();
-  // setupTachyonDriver();
-  setupRedisDriver();
-  runBenchMarks();
+  testConfigs(configFile);
+
+  std::istringstream iss(targetSystem);
+  std::string target;
+  bool all = false, ramcloud = false, tachyon = false, redis = false;
+  int targets = 0;
+  while (getline(iss, target, ',')) {
+    if (target.compare("all") == 0) {
+      all = true;
+      targets = 3;
+      break;
+    }
+    if (target.compare("ramcloud") == 0) {
+      if (!ramcloud) {
+        targets++;
+        ramcloud = true;
+      }
+    } else if (target.compare("tachyon") == 0) {
+      if (!tachyon) {
+        targets++;
+        tachyon = true;
+      }
+    } else if (target.compare("redis") == 0) {
+      if (!redis) {
+        targets++;
+        redis = true;
+      }
+    }
+  }
+  if (targets == 0) {
+    printf("no targets specified for benchmarks, exit\n");
+    exit(0);
+  }
+
+  printf("%d targets specified for benchmarks: %s\n", targets, targetSystem);
+
+  BenchDriverBase **drivers = new BenchDriverBase *[targets];
+  int ndriver = 0;
+  if (all || ramcloud) {
+    setupRamCloudDriver();
+    drivers[ndriver++] = &gRamDriver;
+  }
+  if (all || tachyon) {
+    setupTachyonDriver();
+    drivers[ndriver++] = &gTacDriver;
+  }
+  if (all || redis) {
+    setupRedisDriver();
+    drivers[ndriver++] = &gRedDriver;
+  }
+  runBenchMarks(drivers, ndriver, gBenchmarks, gNbench);
   return 0;
 }
