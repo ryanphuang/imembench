@@ -1,5 +1,7 @@
 #include "imembench.h"
+
 #include <Cycles.h>
+#include <hirediscluster.h>
 #include <Common.h>
 
 #include <stdio.h>

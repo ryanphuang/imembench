@@ -1,4 +1,5 @@
 #include <hiredis.h>
+#include <hirediscluster.h>
 
 #include <string>
 #include <cstring>
@@ -6,13 +7,17 @@
 #include <cmath>
 
 #include "imembench.h"
-#include "rediscluster.h"
 
 using namespace std;
+using namespace rediscluster;
 
-bool RedisDriver::init(ConnectionConfig *config)
+bool RedisDriver::init(BenchConfig *config)
 {
   reset();
+  if (config == NULL) {
+    fprintf(stderr, "NULL RedisBenchConfig\n");
+    return false;
+  }
   m_client = new RedisCluster();
   if (!m_client->init(config)) {
     delete m_client;
@@ -45,7 +50,7 @@ void RedisDriver::write(const char *key, uint32_t keylen,
 {
   redisContext *c = m_client->getClientForKey(key, keylen);
   if (c != NULL) {
-    redisReply *reply = m_client->retryMovedCommand(c,"SET %s %s", 
+    redisReply *reply = m_client->executeCommand(c,"SET %s %s", 
       string(key, keylen).c_str(), value);
     freeReplyObject(reply);
   }
@@ -57,7 +62,7 @@ int RedisDriver::read(const char *key, uint32_t keylen,
   int rd = -1;
   redisContext *c = m_client->getClientForKey(key, keylen);
   if (c != NULL) {
-    redisReply *reply = m_client->retryMovedCommand(c, 
+    redisReply *reply = m_client->executeCommand(c, 
         "GET %s", string(key, keylen).c_str());
     if (reply->type == REDIS_REPLY_STRING) {
       strncpy(buff, reply->str, bufflen);

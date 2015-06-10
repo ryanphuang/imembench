@@ -9,11 +9,17 @@
 using namespace tachyon;
 using namespace std;
 
-bool TachyonDriver::init(ConnectionConfig *config)
+bool TachyonDriver::init(BenchConfig *config)
 {
   reset();
-  const char *host = config->getHost();
-  int port = config->getPort();
+  TachyonBenchConfig * rconfig = dynamic_cast<TachyonBenchConfig *>(config);
+  if (rconfig == NULL) {
+    fprintf(stderr, "NULL TachyonBenchConfig\n");
+    return false;
+  }
+
+  const char *host = rconfig->getHost();
+  int port = rconfig->getPort();
   std::stringstream ss;
   ss << host << ":" << port;
   TachyonClient *client = TachyonClient::createClient(ss.str().c_str());
@@ -21,7 +27,7 @@ bool TachyonDriver::init(ConnectionConfig *config)
     fprintf(stderr, "fail to create tachyon client\n");
     return false;
   }
-  const char *kvprefix = config->getKVStorePrefix();
+  const char *kvprefix = rconfig->getKVStore();
   m_client = TachyonKV::createKV(client, CACHE, MUST_CACHE, 
       DEFAULT_KV_BLOCK_BYTES, kvprefix); 
   delete client; // don't need tachyon client any more, only need kvstore
@@ -40,15 +46,16 @@ bool TachyonDriver::init(ConnectionConfig *config)
     return false;
   }
   */
-  m_config = config;
+  m_config = rconfig;
   m_initialized = true;
   return true;
 }
 
 void TachyonDriver::reset()
 {
-  if (m_initialized && m_client != NULL) {
-    const char *kvprefix = m_config->getKVStorePrefix();
+  TachyonBenchConfig * rconfig = dynamic_cast<TachyonBenchConfig *>(m_config);
+  if (m_initialized && m_client != NULL && rconfig != NULL) {
+    const char *kvprefix = rconfig->getKVStore();
     if (strlen(kvprefix) > 0) {
       bool ok = m_client->getClient()->deletePath(kvprefix, true);
       if (!ok) {
@@ -56,8 +63,8 @@ void TachyonDriver::reset()
       }
     }
   }
-  if (m_config != NULL)
-    delete m_config;
+  if (rconfig != NULL)
+    delete rconfig;
 
   m_initialized = false;
   m_config = NULL;

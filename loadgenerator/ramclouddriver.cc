@@ -8,8 +8,9 @@ using namespace RAMCloud;
 
 void RamCloudDriver::reset()
 {
-  if (m_initialized && m_client != NULL && m_config != NULL) {
-    const char *testTableName = m_config->getTestTableName();
+  RAMCloudBenchConfig * rconfig = dynamic_cast<RAMCloudBenchConfig *>(m_config);
+  if (m_initialized && m_client != NULL && rconfig != NULL) {
+    const char *testTableName = rconfig->getTestTableName();
     if (strlen(testTableName) > 0) {
       m_client->dropTable(testTableName);
       printf("test table '%s' dropped\n", testTableName);
@@ -20,8 +21,9 @@ void RamCloudDriver::reset()
   //  delete m_client;
   if (m_buffer != NULL)
     delete m_buffer;
-  if (m_config != NULL)
-    delete m_config;
+  if (rconfig != NULL) {
+    delete rconfig;
+  }
 
   m_initialized = false;
   m_config = NULL;
@@ -31,21 +33,25 @@ void RamCloudDriver::reset()
   m_test_table_id = 0;
 }
 
-bool RamCloudDriver::init(ConnectionConfig *config) 
+bool RamCloudDriver::init(BenchConfig *config) 
 {
   reset();
+  RAMCloudBenchConfig * rconfig = dynamic_cast<RAMCloudBenchConfig *>(config);
+  if (rconfig == NULL) {
+    fprintf(stderr, "NULL RAMCloudBenchConfig\n");
+    return false;
+  }
   m_buffer = new Buffer();
-
-  const char *cname = config->getClusterName();
+  const char *cname = rconfig->getClusterName();
   if (cname == NULL || strlen(cname) == 0)
-    m_client = new RamCloud(config->getLocator());
+    m_client = new RamCloud(rconfig->getLocator());
   else
-    m_client = new RamCloud(config->getLocator(), cname);
-  m_config = config;
+    m_client = new RamCloud(rconfig->getLocator(), cname);
+  m_config = rconfig;
 
   // the r/w will happen inside the test table if no table name
   // is specified!
-  const char *tableName = config->getTestTableName();
+  const char *tableName = rconfig->getTestTableName();
   if (tableName != NULL && strlen(tableName) > 0) {
     try {
       RamCloud *rc = (RamCloud *)m_client;

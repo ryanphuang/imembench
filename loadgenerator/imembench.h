@@ -8,7 +8,7 @@
 #include <map>
 #include <utility>
 
-#include "config.h"
+#include "benchconfig.h"
 
 // some forward declarations
 namespace RAMCloud {
@@ -19,7 +19,9 @@ namespace tachyon {
   class TachyonClient;
   class TachyonKV;
 }
-class RedisCluster;
+namespace rediscluster {
+  class RedisCluster;
+}
 
 ////////////////////////////////////////////
 //    Basic benchmark driver, should
@@ -36,7 +38,7 @@ class BenchDriverBase {
 
     virtual ~BenchDriverBase() {}
 
-    virtual bool init(ConnectionConfig *config) = 0;
+    virtual bool init(BenchConfig *config) = 0;
     virtual void reset() = 0;
 
     virtual void write(const char *key, uint32_t keylen, const char *value, uint32_t valuelen) = 0;
@@ -48,7 +50,7 @@ class BenchDriverBase {
   protected:
     const char *m_name;
     bool m_initialized;
-    ConnectionConfig *m_config;
+    BenchConfig *m_config;
     // void *m_client;
 };
 
@@ -68,7 +70,7 @@ class RamCloudDriver : public BenchDriverBase {
     RamCloudDriver(const char *name) : BenchDriverBase(name) {}
     ~RamCloudDriver() { reset(); }
 
-    bool init(ConnectionConfig *config);
+    bool init(BenchConfig *config);
     void reset();
   
     void write(const char *key, uint32_t keylen, const char *value, uint32_t valuelen);
@@ -86,7 +88,7 @@ class TachyonDriver : public BenchDriverBase {
     TachyonDriver(const char *name) : BenchDriverBase(name) {}
     ~TachyonDriver() { reset(); }
 
-    bool init(ConnectionConfig *config);
+    bool init(BenchConfig *config);
     void reset();
 
     void write(const char *key, uint32_t keylen, const char *value, uint32_t valuelen);
@@ -102,7 +104,7 @@ class RedisDriver : public BenchDriverBase {
     RedisDriver(const char *name) : BenchDriverBase(name) {}
     ~RedisDriver() { reset(); }
 
-    bool init(ConnectionConfig *config);
+    bool init(BenchConfig *config);
     void reset();
 
     void write(const char *key, uint32_t keylen, const char *value, uint32_t valuelen);
@@ -110,7 +112,7 @@ class RedisDriver : public BenchDriverBase {
     void *getClient()  { return m_client; } 
 
   protected:
-    RedisCluster *m_client;
+    rediscluster::RedisCluster *m_client;
 };
 
 void runBenchMarks();

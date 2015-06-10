@@ -1,6 +1,7 @@
+#include <hirediscluster.h>
+
 #include "imembench.h"
-#include "config.h"
-#include "rediscluster.h"
+#include "benchconfig.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,7 +11,7 @@
 
 const char * program_name;
 
-BenchConfigParser gParser;
+INIConfigParser gParser;
 
 RamCloudDriver gRamDriver("ramcloud");
 TachyonDriver gTacDriver("tachyon");
@@ -26,19 +27,42 @@ size_t gNdriver = sizeof(gDrivers) / sizeof(gDrivers[0]);
 
 void testConfigs(const char *configfile)
 {
-  BenchConfigParser parser;
+  printf("========================================================\n");
+  printf("               test benchmark configurations            \n");
+  printf("========================================================\n");
+  INIConfigParser parser;
   parser.parse(configfile);
-  BenchConfigSections sections;
+  INISections sections;
   parser.getSections(sections);
-  BenchConfigSections::iterator sit;
+  INISections::iterator sit;
   for (sit = sections.begin(); sit != sections.end(); ++sit) {
     printf("section: %s\n", sit->c_str());
-    BenchConfigMap configs = parser.getSectionConfigs(sit->c_str());
-    BenchConfigMap::iterator cit;
-    for (cit = configs.begin(); cit != configs.end(); ++cit) {
+    INISectionConfigs* configs = parser.getSectionConfigs(sit->c_str());
+    INISectionConfigs::iterator cit;
+    for (cit = configs->begin(); cit != configs->end(); ++cit) {
       printf("%s=%s\n", cit->first.c_str(), cit->second.c_str());
     }
   }
+  printf("--------------------------------------------------------\n");
+  RAMCloudBenchConfig * rcconf = RAMCloudBenchConfig::fromINI(parser.getConfigs());
+  if (rcconf == NULL) {
+    fprintf(stderr, "Fail to parse RAMCloud configurations\n");
+  } else {
+    printf("RAMCloud configurations parsed\n");
+  }
+  TachyonBenchConfig * tcconf = TachyonBenchConfig::fromINI(parser.getConfigs());
+  if (tcconf == NULL) {
+    fprintf(stderr, "Fail to parse Tachyon configurations\n");
+  } else {
+    printf("Tachyon configurations parsed\n");
+  }
+  RedisBenchConfig *rdconf = RedisBenchConfig::fromINI(parser.getConfigs());
+  if (rdconf == NULL) {
+    fprintf(stderr, "Fail to parse Redis configurations\n");
+  } else {
+    printf("Redis configurations parsed\n");
+  }
+  printf("========================================================\n");
 }
 
 void usage() 
@@ -46,76 +70,10 @@ void usage()
   fprintf(stderr, "\n\tUsage: %s configfile\n\n", program_name);
 }
 
-const char *getConfig(BenchConfigMap &configs, const char *section, 
-      const char *key, bool noCheck=false, bool checkEmpty=true) 
-{
-  BenchConfigMap::iterator cit;
-  cit = configs.find(key);
-  if (cit == configs.end()) {
-    if (!noCheck) {
-      fprintf(stderr, "Error: no '%s' setting for %s\n", key, section);
-    }
-    return NULL;
-  }
-  if (cit->second.length() == 0) {
-    if (!noCheck && checkEmpty) {
-      fprintf(stderr, "Error: '%s' for %s has empty value\n", key, section);
-      return NULL;
-    }
-  }
-  return cit->second.c_str();
-}
-
 void setupRamCloudDriver()
 {
   bool ok;
-  const char *host = NULL;
-  const char *sport = NULL;
-  const char *transport = NULL;
-  const char *clusterName = NULL;
-  const char *testTable = NULL;
-  int port; 
-
-  BenchConfigMap rc_configs;
-  rc_configs  = gParser.getSectionConfigs("ramcloud");
-  if (rc_configs.size() == 0) {
-    fprintf(stderr, "Error: empty ramcloud configurations\n");
-    exit(1);
-  }
-
-  BenchConfigMap::iterator cit;
-  cit = rc_configs.find("host");
-  if (cit == rc_configs.end()) {
-    fprintf(stderr, "Error: no 'host' setting for ramcloud\n");
-    exit(1);
-  }
-  host = getConfig(rc_configs, "ramcloud", "host");
-  if (host == NULL)
-    exit(1);
-  sport = getConfig(rc_configs, "ramcloud", "port");
-  if (sport == NULL)
-    exit(1);
-  std::stringstream ss(sport);
-  ss >> port;
-  if (!ss) {
-    fprintf(stderr, "Error: 'port'=%s is not an integer\n", sport);
-    exit(1);
-  }
-  transport = getConfig(rc_configs, "ramcloud", "transport");
-  if (transport == NULL)
-    exit(1);
-
-  clusterName = getConfig(rc_configs, "ramcloud", "cluster_name", true);
-  testTable = getConfig(rc_configs, "ramcloud", "test_table", true);
-  if (testTable == NULL)
-    testTable = "test";
-
-  ConnectionConfig * rcconf = new ConnectionConfig(host, port);
-
-  (*rcconf).setTransport(transport)
-           .setClusterName(clusterName)
-           .setTestTable(testTable);
-
+  RAMCloudBenchConfig * rcconf = RAMCloudBenchConfig::fromINI(gParser.getConfigs());
   ok = gRamDriver.init(rcconf);
   if (!ok) {
     printf("fail to initialize ramcloud driver\n");
@@ -136,36 +94,7 @@ void setupRamCloudDriver()
 void setupTachyonDriver()
 {
   bool ok;
-  const char *host = NULL;
-  const char *sport = NULL;
-  const char *kvstorePrefix = NULL;
-  int port; 
-  BenchConfigMap tc_configs;
-  BenchConfigMap::iterator cit;
-
-  tc_configs = gParser.getSectionConfigs("tachyon");
-  if (tc_configs.size() == 0) {
-    fprintf(stderr, "Error: empty tachyon configurations\n");
-    exit(1);
-  }
-
-  host = getConfig(tc_configs, "tachyon", "host");
-  if (host == NULL)
-    exit(1);
-  sport = getConfig(tc_configs, "tachyon", "port");
-  if (sport == NULL)
-    exit(1);
-  std::stringstream ss(sport);
-  ss >> port;
-  if (!ss) {
-    fprintf(stderr, "Error: 'port'=%s is not an integer\n", sport);
-    exit(1);
-  }
-  kvstorePrefix = getConfig(tc_configs, "tachyon", "kv_store_prefix");
-
-  ConnectionConfig * tcconf = new ConnectionConfig(host, port);
-  (*tcconf).setKVStore(kvstorePrefix);
-
+  TachyonBenchConfig * tcconf = TachyonBenchConfig::fromINI(gParser.getConfigs());
   ok = gTacDriver.init(tcconf);
   if (!ok) {
     printf("fail to initialize tachyon driver\n");
@@ -186,62 +115,15 @@ void setupTachyonDriver()
 void setupRedisDriver()
 {
   bool ok;
-  const char *cluster = NULL;
-  const char *sport = NULL;
-  const char *stimeout = NULL;
-  int port; 
-  double timeout;
-
-  BenchConfigMap rd_configs;
-  rd_configs = gParser.getSectionConfigs("redis");
-  if (rd_configs.size() == 0) {
-    fprintf(stderr, "Error: empty redis configurations\n");
-    exit(1);
-  }
-  cluster = getConfig(rd_configs, "redis", "cluster");
-  if (cluster == NULL)
-    exit(1);
-  sport = getConfig(rd_configs, "redis", "port");
-  if (sport == NULL)
-    exit(1);
-  std::stringstream ss(sport);
-  ss >> port;
-  if (!ss) {
-    fprintf(stderr, "Error: 'port'=%s is not an integer\n", sport);
-    exit(1);
-  }
-
-  stimeout = getConfig(rd_configs, "redis", "timeout");
-  if (stimeout != NULL) {
-    std::stringstream ss(stimeout);
-    ss >> timeout;
-    if (!ss) {
-      fprintf(stderr, "Error: 'port'=%s is not an integer\n", sport);
-      exit(1);
-    }
-    if (timeout <= 0) {
-      fprintf(stderr, "Error: 'timeout'=%s is not positive\n", stimeout);
-      exit(1);
-    }
-  } else {
-    timeout = 1.5;
-  }
-  
-  ConnectionConfig * rdconf = new ConnectionConfig("", port); // use cluster instead of host
-  (*rdconf).setCluster(cluster).setTimeout(timeout);
-
-  HostList hosts = rdconf->getCluster();
-  HostList::iterator hit;
-  for (hit = hosts.begin(); hit != hosts.end(); ++hit) {
-    printf("%s\n", hit->c_str());
-  }
+  RedisBenchConfig *rdconf = RedisBenchConfig::fromINI(gParser.getConfigs());
   ok = gRedDriver.init(rdconf);
   if (!ok) {
     printf("fail to initialize redis driver\n");
     exit(1);
   }
 
-  RedisCluster *client = (RedisCluster *) gRedDriver.getClient();
+  rediscluster::RedisCluster *client = (rediscluster::RedisCluster *) 
+        gRedDriver.getClient();
   client->getClientForKey("hello", 5);
   client->getClientForKey("world", 5);
   client->getClientForKey("foo", 3);
@@ -274,14 +156,14 @@ int main(int argc, char ** argv)
     fprintf(stderr, "configuration file '%s' does not exist\n", configfile);
     exit(1);
   }
-  // testConfigs(configfile);
   ok = gParser.parse(configfile);
   if (!ok) {
     fprintf(stderr, "Error: invalid configuration file\n");
     exit(1);
   }
-  setupRamCloudDriver();
-  setupTachyonDriver();
+  // testConfigs(configfile);
+  // setupRamCloudDriver();
+  // setupTachyonDriver();
   setupRedisDriver();
   runBenchMarks();
   return 0;
