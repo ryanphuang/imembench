@@ -29,6 +29,7 @@ pull the git submodules for building.
 Usage: ./imembench [OPTIONS] [tachyon|ramcloud|redis|all]
 
   OPTION
+        -l, --list                   list available benchmarks and supported targets
         -c, --config_file            configuration file (default imembench.ini) for the benchmark
         -w, --workload_file          workload trace file to use instead of the default benchmark
         -b, --benchmark              comma-separated list of benchmarks to run on the target systems
@@ -36,7 +37,8 @@ Usage: ./imembench [OPTIONS] [tachyon|ramcloud|redis|all]
 
   EXAMPLE
         ./imembench -c imembench.ini redis
-        ./imembench -c imembench.ini --workload_file trace.ycsb --benchmark readonly --target redis,ramcloud
+        ./imembench -c imembench.ini --benchmark randomRW redis
+        ./imembench -c imembench.ini --workload_file trace.ycsb --benchmark ycsbReplay --target redis,ramcloud
 ```
 
 ## existing interfaces:
