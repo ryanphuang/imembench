@@ -7,6 +7,11 @@
 
 #include <time.h>
 
+// #define USE_CLOCKTIME   1
+#define USE_RDTSC       1
+
+#define CLOCK_TYPE CLOCK_MONOTONIC
+
 static __inline __attribute__((always_inline)) uint64_t rdtsc()
 {
     uint32_t lo, hi;
@@ -14,7 +19,43 @@ static __inline __attribute__((always_inline)) uint64_t rdtsc()
     return (((uint64_t)hi << 32) | lo);
 }
 
-#define CLOCK_TYPE CLOCK_MONOTONIC
+static double cyclesPerSec = 0;
+
+static double getCyclesPerSec()
+{
+  struct timespec startTime, stopTime;
+  uint64_t startCycles, stopCycles, nsecs;
+  double cPSec;
+  clock_gettime(CLOCK_TYPE, &startTime);
+  startCycles = rdtsc();
+  while (true) {
+    clock_gettime(CLOCK_TYPE, &stopTime);
+    stopCycles = rdtsc();
+    nsecs = (stopTime.tv_nsec - startTime.tv_nsec) + 
+            (stopTime.tv_sec - startTime.tv_sec) * 1000000000;
+    if (nsecs > 1000000) {
+      cPSec = 1000000000.0 * ((double) (stopCycles - startCycles)) / (double) nsecs;
+      break;
+    }
+  }
+  return cPSec;
+}
+
+static __inline __attribute__((always_inline)) double cyclesToSeconds(uint64_t cycles)
+{
+  if (cyclesPerSec == 0) {
+    cyclesPerSec = getCyclesPerSec();
+  }
+  return (double) cycles / cyclesPerSec;
+}
+
+static __inline __attribute__((always_inline)) double cyclesToMicroSeconds(uint64_t cycles)
+{
+  if (cyclesPerSec == 0) {
+    cyclesPerSec = getCyclesPerSec();
+  }
+  return 1000000.0 * (double) cycles / cyclesPerSec;
+}
 
 #define TIME(block, sec, ns) do {\
 	struct timespec start;\
@@ -26,6 +67,12 @@ static __inline __attribute__((always_inline)) uint64_t rdtsc()
 	(ns) = end.tv_nsec - start.tv_nsec;\
 } while(0)
 
+
+#define RDTSC(block, interval) do { \
+  uint64_t start = rdtsc();         \
+  (block);                          \
+  (interval) = rdtsc() - start;     \
+} while (0)
 
 /* glibc malloc functions*/
 extern void* __libc_malloc  (size_t size);
@@ -47,50 +94,76 @@ static bool enable_realloc_hook = true;
 
 /* the hooks themselves */
 static void* malloc_hook(size_t size) {
+	void* ptr;
+#ifdef USE_CLOCKTIME
 	time_t sec;
 	long ns;
-
-	void* ptr;
-
 	TIME(ptr = malloc(size), sec, ns);
-
 	printf("Call to malloc(%zu) -> %p. Took %us, %luns\n", size, ptr, sec, ns);
-
+#elif USE_RDTSC
+  uint64_t interval;
+  RDTSC(ptr = malloc(size), interval);
+  double usecs = cyclesToMicroSeconds(interval);
+	printf("Call to malloc(%zu) -> %p. Took %lu cycles, %lf.3 us\n", size, ptr, interval, usecs);
+#else
+  ptr = malloc(size);
+#endif 
 	return ptr;
 }
 
 static void free_hook(void* ptr) {
+#ifdef USE_CLOCKTIME
 	time_t sec;
 	long ns;
-
 	TIME(free(ptr), sec, ns);
-
 	printf("Call to free(%p). Took %us, %luns\n", ptr, sec, ns);
+#elif USE_RDTSC
+  uint64_t interval;
+  RDTSC(free(ptr), interval);
+  double usecs = cyclesToMicroSeconds(interval);
+	printf("Call to free(%p). Took %lu cycles, %lf.3 us\n", ptr, interval, usecs);
+#else
+  free(ptr);
+#endif
 }
 
 static void* calloc_hook(size_t n, size_t size) {
+	void* ptr;
+#ifdef USE_CLOCKTIME
 	time_t sec;
 	long ns;
-
-	void* ptr;
-
 	TIME(ptr = calloc(n, size), sec, ns);
-
 	printf("Call to calloc(%zu, %zu) -> %p. Took %us, %luns\n",
 			n, size, ptr, sec, ns);
+#elif USE_RDTSC
+  uint64_t interval;
+  RDTSC(ptr = calloc(n, size), interval);
+  double usecs = cyclesToMicroSeconds(interval);
+	printf("Call to calloc(%zu, %zu) -> %p. Took %lu cycles, %lf.3 us\n",
+			n, size, ptr, interval, usecs);
+#else
+  ptr = calloc(n, size);
+#endif
 	return ptr;
 }
 
 static void* realloc_hook(void* old_ptr, size_t size) {
+	void* ptr;
+#ifdef USE_CLOCKTIME
 	time_t sec;
 	long ns;
-
-	void* ptr;
-
 	TIME(ptr = realloc(old_ptr, size), sec, ns);
-	
 	printf("Call to realloc(%p, %zu) -> %p. Took %us, %luns\n",
 			old_ptr, size, ptr, sec, ns);
+#elif USE_RDTSC
+  uint64_t interval;
+  RDTSC(ptr = realloc(old_ptr, size), interval);
+  double usecs = cyclesToMicroSeconds(interval);
+	printf("Call to realloc(%p, %zu) -> %p. Took %lu cycles, %lf.3 us\n",
+			old_ptr, size, ptr, interval, usecs);
+#else
+  ptr = realloc(old_ptr, size);
+#endif
 	return ptr;
 }
 

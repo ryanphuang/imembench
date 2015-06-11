@@ -2,7 +2,7 @@ default: malloc.o
 
 .PHONY: default clean
 
-malloc.o:
+malloc.o: malloc.c
 	gcc -std=c99 -c malloc.c
 
 test: malloc.o
