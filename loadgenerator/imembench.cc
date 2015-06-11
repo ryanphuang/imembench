@@ -296,11 +296,10 @@ void ycsbReplay(BenchDriverBase *driver, const char *traceFile)
       continue;
     }
     total += interval;
-    // times.push_back(interval);
+    times.push_back(interval);
   }
 
   printf("total bytes = %lf\n", totalBytes);
-  /*
   TimeDist dist;
   getDist(times, &dist);
   dist.bandwidth = totalBytes / RAMCloud::Cycles::toSeconds(total);
@@ -323,7 +322,6 @@ void ycsbReplay(BenchDriverBase *driver, const char *traceFile)
               formatTime(dist.p999).c_str(), description);
   }
   printBandwidth(name, dist.bandwidth, "bandwidth");
-  */
 }
 
 
