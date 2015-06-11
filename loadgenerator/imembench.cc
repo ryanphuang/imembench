@@ -329,12 +329,12 @@ void ycsbReplay(BenchDriverBase *driver, const char *traceFile)
 //
 void randomRW(BenchDriverBase *driver, const char *traceFile)
 {
-#define NUM_SIZES 1
-    // int sizes[] = {100, 1000, 10000, 100000, 1000000};
-    int sizes[] = {1000000};
+#define NUM_SIZES 5
+    int sizes[] = {100, 1000, 10000, 100000, 1000000};
+    // int sizes[] = {1000000};
     TimeDist readDists[NUM_SIZES], writeDists[NUM_SIZES];
-    // const char* ids[] = {"100", "1K", "10K", "100K", "1M"};
-    const char* ids[] = {"1M"};
+    const char* ids[] = {"100", "1K", "10K", "100K", "1M"};
+    // const char* ids[] = {"1M"};
     uint16_t keyLength = 30;
     char name[50], description[50];
 
