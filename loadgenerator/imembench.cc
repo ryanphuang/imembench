@@ -80,6 +80,9 @@ bool YCSBTraceParser::nextLog(TraceLog *log)
     start = p;
     while (*p != '\0' && *p != '|') p++;
     max_len = p - start;
+    if (max_len >= MAX_TRACE_KEY) {
+      max_len = MAX_TRACE_KEY - 1;
+    }
     strncpy(log->key, start, max_len);
     log->key[max_len] = '\0'; // need to pad '\0'
     if (*p == '\0') {
@@ -92,7 +95,7 @@ bool YCSBTraceParser::nextLog(TraceLog *log)
       return true;
     }
     ++p;
-    strcpy(log->value, p);
+    strncpy(log->value, p, MAX_TRACE_VALUE);
     return true;
   } else {
     if (m_ifs.is_open()) {
@@ -253,26 +256,28 @@ void ycsbReplay(BenchDriverBase *driver, const char *traceFile)
     return;
   }
   struct TraceLog log;
-  uint32_t maxValueLength = 100000;
-  char value[maxValueLength];
 
   uint64_t total = 0;
   std::vector<uint64_t> times;
   double totalBytes = 0;
+  size_t keyLen, valLen;
   while (parser.nextLog(&log)) {
     bool ok = true;
     uint64_t start, interval;
     switch (log.op) {
       case T_OP_GET:
+        keyLen = strlen(log.key);
         start = RAMCloud::Cycles::rdtsc();
-        driver->read(log.key, (uint32_t) strlen(log.key), value, maxValueLength);
+        driver->read(log.key, (uint32_t) keyLen, log.value, MAX_TRACE_VALUE);
         interval = RAMCloud::Cycles::rdtsc() - start;
-        totalBytes += (uint32_t) strlen(value);
-        // printf("GET %s = %s\n", log.key, value);
+        totalBytes += (uint32_t) strlen(log.value);
+        // printf("GET %s = %s\n", log.key, log.value);
         break;
       case T_OP_UPDATE:
+        keyLen = strlen(log.key);
+        valLen = strlen(log.value);
         start = RAMCloud::Cycles::rdtsc();
-        driver->write(log.key, (uint32_t) strlen(log.key), log.value, (uint32_t) strlen(log.value));
+        driver->write(log.key, (uint32_t) strlen(log.key), log.value, (uint32_t) valLen);
         interval = RAMCloud::Cycles::rdtsc() - start;
         totalBytes += (uint32_t) strlen(log.value);
         // printf("PUT %s = %s\n", log.key, log.value);
@@ -291,10 +296,11 @@ void ycsbReplay(BenchDriverBase *driver, const char *traceFile)
       continue;
     }
     total += interval;
-    times.push_back(interval);
+    // times.push_back(interval);
   }
 
   printf("total bytes = %lf\n", totalBytes);
+  /*
   TimeDist dist;
   getDist(times, &dist);
   dist.bandwidth = totalBytes / RAMCloud::Cycles::toSeconds(total);
@@ -317,6 +323,7 @@ void ycsbReplay(BenchDriverBase *driver, const char *traceFile)
               formatTime(dist.p999).c_str(), description);
   }
   printBandwidth(name, dist.bandwidth, "bandwidth");
+  */
 }
 
 
@@ -325,9 +332,11 @@ void ycsbReplay(BenchDriverBase *driver, const char *traceFile)
 void randomRW(BenchDriverBase *driver, const char *traceFile)
 {
 #define NUM_SIZES 1
-    int sizes[] = {100, 1000, 10000, 100000, 1000000};
+    // int sizes[] = {100, 1000, 10000, 100000, 1000000};
+    int sizes[] = {1000000};
     TimeDist readDists[NUM_SIZES], writeDists[NUM_SIZES];
-    const char* ids[] = {"100", "1K", "10K", "100K", "1M"};
+    // const char* ids[] = {"100", "1K", "10K", "100K", "1M"};
+    const char* ids[] = {"1M"};
     uint16_t keyLength = 30;
     char name[50], description[50];
 

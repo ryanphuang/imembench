@@ -63,7 +63,7 @@ enum TraceOp {
 };
 
 #define MAX_TRACE_KEY        128
-#define MAX_TRACE_VALUE      1000000
+#define MAX_TRACE_VALUE      4096
 
 struct TraceLog {
   TraceOp op;
