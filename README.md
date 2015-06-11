@@ -13,17 +13,21 @@ systems in the form of either the source language or bindings.
 after clone the main repository, run `git submodule update --init --recursive` to
 pull the git submodules for building.
 
-## build instruction:
+## build instructions:
 * Build dependencies: 
   - RAMCloud: at project root, `cd bindings/ramcloud/c++ && make`
+    * if the generated objects are in `bindings/ramcloud/c++/obj`, rename the `obj` directory to `obj.master`
   - Redis: at project root, `cd bindings/redis/c++/hiredis && make`
-  - Tachyon: no need, already compiled jar file in `bindings/tachyon/java/client`
+  - Tachyon: at project root, `cd bindings/tachyon/c++ && make`
 
 * Build imembench:
   - `cd loadgenerator && make`
 
 ## use benchmark
-`source env.sh`
+First, `source env.sh`
+
+Then, copy the `samplebench.ini` (in `loadgenerator` directory) to `imembench.ini` and 
+modify the configurations accordingly.
 
 ```
 Usage: ./imembench [OPTIONS] [tachyon|ramcloud|redis|all]
