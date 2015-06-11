@@ -3,8 +3,16 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #include <time.h>
+
+static __inline __attribute__((always_inline)) uint64_t rdtsc()
+{
+    uint32_t lo, hi;
+    __asm__ __volatile__("rdtsc" : "=a" (lo), "=d" (hi));
+    return (((uint64_t)hi << 32) | lo);
+}
 
 #define CLOCK_TYPE CLOCK_MONOTONIC
 
@@ -46,7 +54,7 @@ static void* malloc_hook(size_t size) {
 
 	TIME(ptr = malloc(size), sec, ns);
 
-	printf("Call to malloc(%u) -> %p. Took %us, %luns\n", size, ptr, sec, ns);
+	printf("Call to malloc(%zu) -> %p. Took %us, %luns\n", size, ptr, sec, ns);
 
 	return ptr;
 }
@@ -68,7 +76,7 @@ static void* calloc_hook(size_t n, size_t size) {
 
 	TIME(ptr = calloc(n, size), sec, ns);
 
-	printf("Call to calloc(%u, %u) -> %p. Took %us, %luns\n",
+	printf("Call to calloc(%zu, %zu) -> %p. Took %us, %luns\n",
 			n, size, ptr, sec, ns);
 	return ptr;
 }
@@ -81,7 +89,7 @@ static void* realloc_hook(void* old_ptr, size_t size) {
 
 	TIME(ptr = realloc(old_ptr, size), sec, ns);
 	
-	printf("Call to realloc(%p, %u) -> %p. Took %us, %luns\n",
+	printf("Call to realloc(%p, %zu) -> %p. Took %us, %luns\n",
 			old_ptr, size, ptr, sec, ns);
 	return ptr;
 }
