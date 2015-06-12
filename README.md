@@ -40,10 +40,38 @@ Usage: ./imembench [OPTIONS] [tachyon|ramcloud|redis|all]
         -t, --target                 comma-separated list of target system to evaluate
 
   EXAMPLE
-        ./imembench -c imembench.ini redis
-        ./imembench -c imembench.ini --benchmark randomRW redis
+        ./imembench -c imembench.ini redis   # care, run all benchmarks, very slow
+        ./imembench -c imembench.ini --benchmark uniformRandomRW redis
         ./imembench -c imembench.ini --workload_file trace.ycsb --benchmark ycsbReplay --target redis,ramcloud
 ```
+
+## supported targets and benchmarks
+
+Supported targets:
+* ramcloud
+* tachyon
+* redis
+
+Supported benchmarks:
+* ycsbReplay
+* uniformRandomRW
+* zipfRandomRW
+* uniformRandomReadMost
+* zipfRandomReadMost
+* uniformRandomWriteMost
+* zipfRandomWriteMost
+* uniformRandomRWSmallObj
+* zipfRandomRWSmallObj
+* uniformRandomReadMostSmallObj
+* zipfRandomReadMostSmallObj
+* uniformRandomWriteMostSmallObj
+* zipfRandomWriteMostSmallObj
+* uniformRandomRWLargeObj
+* zipfRandomRWLargeObj
+* uniformRandomReadMostLargeObj
+* zipfRandomReadMostLargeObj
+* uniformRandomWriteMostLargeObj
+* zipfRandomWriteMostLargeObj
 
 ## existing interfaces:
 - RAMCloud:
