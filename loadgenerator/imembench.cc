@@ -33,26 +33,106 @@ struct TimeDist {
                                   // if no such measurement.
 };
 
-void uniformRandomRW(BenchDriverBase *driver, const char *traceFile);
-void zipfRandomRW(BenchDriverBase *driver, const char *traceFile);
+const double GB = 1024.0*1024.0*1024.0;
+const double MB = 1024.0*1024.0;
+const double KB = 1024.0;
 
-void ycsbReplay(BenchDriverBase *driver, const char *traceFile);
-void readIntensive(BenchDriverBase *driver, const char *traceFile);
-void writeOnly(BenchDriverBase *driver, const char *traceFile);
+void uniformRandomRW(BenchDriverBase *driver, WorkloadParameter *params, int nparams, const char *traceFile);
+void zipfRandomRW(BenchDriverBase *driver, WorkloadParameter *params, int nparams, const char *traceFile);
+void ycsbReplay(BenchDriverBase *driver, WorkloadParameter *params, int nparams, const char *traceFile);
 
 void getDist(std::vector<uint64_t>& times, TimeDist* dist);
 std::string formatTime(double seconds);
 void printBandwidth(const char* name, double bandwidth, const char* description);
+char*  humanReadBytes(double bytes, char readable[], int maxlen); 
+
+WorkloadParameter defaultReadWriteEqualParam [] = {
+//  keyLength  objSize  dataSize operations readPercent writePercent  id
+  {30, 100,     200000000, 10000, 0.5, 0.5, "100"   }, 
+  {30, 1000,    200000000, 10000, 0.5, 0.5, "1K"    }, 
+  {30, 10000,   200000000, 10000, 0.5, 0.5, "10K"   }, 
+  {30, 100000,  200000000, 10000, 0.5, 0.5, "100K"  }, 
+  {30, 1000000, 200000000, 10000, 0.5, 0.5, "1M"    }, 
+}; 
+
+WorkloadParameter defaultReadMostParam [] = {
+//  keyLength  objSize  dataSize operations readPercent writePercent 
+  {30, 100,     200000000, 10000, 0.9, 0.1, "100"  }, 
+  {30, 1000,    200000000, 10000, 0.9, 0.1, "1K"   }, 
+  {30, 10000,   200000000, 10000, 0.9, 0.1, "10K"  }, 
+  {30, 100000,  200000000, 10000, 0.9, 0.1, "100K" }, 
+  {30, 1000000, 200000000, 10000, 0.9, 0.1, "1M"   }, 
+}; 
+
+WorkloadParameter defaultWriteMostParam [] = {
+//  keyLength  objSize  dataSize operations readPercent writePercent 
+  {30, 100,     200000000, 10000, 0.1, 0.9, "100"  }, 
+  {30, 1000,    200000000, 10000, 0.1, 0.9, "1K"   }, 
+  {30, 10000,   200000000, 10000, 0.1, 0.9, "10K"  }, 
+  {30, 100000,  200000000, 10000, 0.1, 0.9, "100K" }, 
+  {30, 1000000, 200000000, 10000, 0.1, 0.9, "1M"   }, 
+}; 
+
+WorkloadParameter defaultReadWriteEqualSmallObjParam [] = {
+//  keyLength  objSize  dataSize operations readPercent writePercent 
+  {30, 10,     20000000, 10000,  0.5, 0.5,  "10"   }, 
+}; 
+
+WorkloadParameter defaultReadMostSmallObjParam [] = {
+//  keyLength  objSize  dataSize operations readPercent writePercent 
+  {30, 10,     20000000, 10000,  0.9, 0.1,  "10"   }, 
+}; 
+
+WorkloadParameter defaultWriteMostSmallObjParam [] = {
+//  keyLength  objSize  dataSize operations readPercent writePercent 
+  {30, 10,      20000000, 10000, 0.1, 0.9, "10"   }, 
+}; 
+
+WorkloadParameter defaultReadWriteEqualLargeObjParam [] = {
+//  keyLength  objSize  dataSize operations readPercent writePercent 
+  {30, 1000000,     200000000, 10000,  0.5, 0.5,  "1M"     }, 
+}; 
+
+WorkloadParameter defaultReadMostLargeObjParam [] = {
+//  keyLength  objSize  dataSize operations readPercent writePercent 
+  {30, 1000000,     200000000, 10000,  0.9, 0.1,  "1M"     }, 
+}; 
+
+WorkloadParameter defaultWriteMostLargeObjParam [] = {
+//  keyLength  objSize  dataSize operations readPercent writePercent 
+  {30, 1000000,     200000000, 10000,  0.1, 0.9,  "1M"     }, 
+}; 
 
 BenchMark gBenchmarks[] = {
-  {"ycsbReplay", ycsbReplay},
-  {"randomRW", uniformRandomRW},
-  {"zipfRandomRW", zipfRandomRW},
-  {"readIntensive", readIntensive},
-  {"writeOnly", writeOnly},
+//      name           |     function       | nparams |  params |
+  {"ycsbReplay"                     , ycsbReplay       ,0  , NULL,                                },
+
+// most intensive benchmarks
+  {"uniformRandomRW"                , uniformRandomRW  ,5  , defaultReadWriteEqualParam           },
+  {"zipfRandomRW"                   , zipfRandomRW     ,5  , defaultReadWriteEqualParam           },
+  {"uniformRandomReadMost"          , uniformRandomRW  ,5  , defaultReadMostParam,                },
+  {"zipfRandomReadMost"             , zipfRandomRW     ,5  , defaultReadMostParam,                },
+  {"uniformRandomWriteMost"         , uniformRandomRW  ,5  , defaultWriteMostParam,               },
+  {"zipfRandomWriteMost"            , zipfRandomRW     ,5  , defaultWriteMostParam,               },
+
+// small objects benchmarks
+  {"uniformRandomRWSmallObj"        , uniformRandomRW  ,1  , defaultReadWriteEqualSmallObjParam   },
+  {"zipfRandomRWSmallObj"           , zipfRandomRW     ,1  , defaultReadWriteEqualSmallObjParam   },
+  {"uniformRandomReadMostSmallObj"  , uniformRandomRW  ,1  , defaultReadMostSmallObjParam,        },
+  {"zipfRandomReadMostSmallObj"     , zipfRandomRW     ,1  , defaultReadMostSmallObjParam,        },
+  {"uniformRandomWriteMostSmallObj" , uniformRandomRW  ,1  , defaultWriteMostSmallObjParam,       },
+  {"zipfRandomWriteMostSmallObj"    , zipfRandomRW     ,1  , defaultWriteMostSmallObjParam,       },
+
+// large objects benchmarks
+  {"uniformRandomRWLargeObj"        , uniformRandomRW  ,1  , defaultReadWriteEqualLargeObjParam   },
+  {"zipfRandomRWLargeObj"           , zipfRandomRW     ,1  , defaultReadWriteEqualLargeObjParam   },
+  {"uniformRandomReadMostLargeObj"  , uniformRandomRW  ,1  , defaultReadMostLargeObjParam,        },
+  {"zipfRandomReadMostLargeObj"     , zipfRandomRW     ,1  , defaultReadMostLargeObjParam,        },
+  {"uniformRandomWriteMostLargeObj" , uniformRandomRW  ,1  , defaultWriteMostLargeObjParam,       },
+  {"zipfRandomWriteMostLargeObj"    , zipfRandomRW     ,1  , defaultWriteMostLargeObjParam,       },
 };
 
-int gNbench = 5;
+int gNbench = 19;
 
 bool YCSBTraceParser::nextLog(TraceLog *log)
 {
@@ -190,10 +270,12 @@ void fillData(BenchDriverBase *driver, int numObjects, uint16_t keyLength, uint3
         driver->write(key.c_str(), (uint32_t) key.length(), &value[0], valueLength);
         writeTime += RAMCloud::Cycles::rdtsc() - start;
     }
+    char bytesDesc[50];
     double rate = numObjects/RAMCloud::Cycles::toSeconds(writeTime);
-    printf("total objects written = %d\n", numObjects);
-    printf("total bytes written = %u\n", numObjects * (keyLength+valueLength));
-    printf("write rate for %d-byte objects: %.1f kobjects/sec,"
+    printf("[Load]: total objects written = %d\n", numObjects);
+    printf("[Load]: total bytes written = %s\n", 
+          humanReadBytes(numObjects * (keyLength+valueLength), bytesDesc, sizeof(bytesDesc)));
+    printf("[Load}: write rate for %d-byte objects: %.1f kobjects/sec,"
           " %.1f MB/sec\n", valueLength, rate/1e03, rate*(keyLength+valueLength)/1e06);
 }
 
@@ -218,8 +300,8 @@ void fillData(BenchDriverBase *driver, int numObjects, uint16_t keyLength, uint3
  * \return
  *      Information about how long the reads took.
  */
-TimeDist
-readRandomObjects(BenchDriverBase *driver, ZipfianGenerator *generator, 
+
+void readRandomObjects(TimeDist *result, BenchDriverBase *driver, ZipfianGenerator *generator, 
           uint32_t numObjects, uint16_t keyLength, uint32_t maxValueLength, 
           int count, double timeLimit)
 {
@@ -252,13 +334,12 @@ readRandomObjects(BenchDriverBase *driver, ZipfianGenerator *generator,
         total += interval;
         times.at(i) = interval;
     }
-    printf("read = %lf\n", totalBytes);
-    TimeDist result;
-    getDist(times, &result);
+    getDist(times, result);
     totalBytes *= RAMCloud::downCast<int>(times.size());
-    result.bandwidth = (double) totalBytes/RAMCloud::Cycles::toSeconds(total);
-    printf("total bytes = %lf\n", totalBytes);
-    return result;
+    result->bandwidth = (double) totalBytes/RAMCloud::Cycles::toSeconds(total);
+    char bytesDesc[50];
+    printf("[Read]: total bytes read %s\n", 
+            humanReadBytes(totalBytes, bytesDesc, sizeof(bytesDesc)));
 }
 
 /**
@@ -284,8 +365,8 @@ readRandomObjects(BenchDriverBase *driver, ZipfianGenerator *generator,
  * \return
  *      Information about how long the writes took.
  */
-TimeDist
-writeRandomObjects(BenchDriverBase *driver, ZipfianGenerator *generator,
+void
+writeRandomObjects(TimeDist *result, BenchDriverBase *driver, ZipfianGenerator *generator,
           uint32_t numObjects, uint16_t keyLength,
           uint32_t valueLength, int count, double timeLimit)
 {
@@ -316,16 +397,16 @@ writeRandomObjects(BenchDriverBase *driver, ZipfianGenerator *generator,
         total += interval;
         times.at(i) = interval;
     }
-    TimeDist result;
-    getDist(times, &result);
+    getDist(times, result);
     double totalBytes = valueLength;
     totalBytes *= RAMCloud::downCast<int>(times.size());
-    result.bandwidth = totalBytes/RAMCloud::Cycles::toSeconds(total);
-    printf("write total bytes = %lf\n", totalBytes);
-    return result;
+    result->bandwidth = totalBytes/RAMCloud::Cycles::toSeconds(total);
+    char bytesDesc[50];
+    printf("[Write]: total bytes written %s\n", 
+            humanReadBytes(totalBytes, bytesDesc, sizeof(bytesDesc)));
 }
 
-void ycsbReplay(BenchDriverBase *driver, const char *traceFile)
+void ycsbReplay(BenchDriverBase *driver, WorkloadParameter *params, int nparams, const char *traceFile)
 {
   if (traceFile == NULL) {
     fprintf(stderr, "no trace file specified for ycsbReplay\n");
@@ -408,128 +489,105 @@ void ycsbReplay(BenchDriverBase *driver, const char *traceFile)
 // Modified from RAMCloud
 //
 void _randomRW(BenchDriverBase *driver, const char *traceFile, bool zipfRandom, 
-              uint32_t objSize, uint16_t keySize, uint32_t dataSize, 
-              uint32_t operations, double readPercent, double writePercent, 
-              TimeDist *readDist, TimeDist *writeDist)
+              WorkloadParameter param, TimeDist *readDist, TimeDist *writeDist)
 {
 
-    int readCount = (int) (operations * readPercent);
-    int writeCount = (int) (operations * writePercent);
+    int readCount = (int) (param.operations * param.readPercent);
+    int writeCount = (int) (param.operations * param.writePercent);
 
     // The "20" below accounts for additional overhead per object beyond the
     // key and value.
-    uint32_t numObjects = dataSize / (objSize + keySize + 20);
+    uint32_t numObjects = param.dataSize / (param.objSize + param.keyLength + 20);
+    char bytesDesc[50];
+    printf("data size = %s, ", humanReadBytes(param.dataSize, bytesDesc, sizeof(bytesDesc)));
+    printf("obj size = %s, ", humanReadBytes(param.objSize, bytesDesc, sizeof(bytesDesc)));
+    printf("key length = %s\n", humanReadBytes(param.keyLength, bytesDesc, sizeof(bytesDesc)));
 
     ZipfianGenerator *generator = NULL;
     if (zipfRandom) {
       generator = new ZipfianGenerator(numObjects);
     }
-    fillData(driver, numObjects, keySize, objSize);
-    *readDist = readRandomObjects(driver, generator, numObjects, keySize,
-            objSize, readCount, 5.0);
-    *writeDist =  writeRandomObjects(driver, generator, numObjects, keySize,
-            objSize, writeCount, 5.0);
+    fillData(driver, numObjects, param.keyLength, param.objSize);
+    readRandomObjects(readDist, driver, generator, numObjects, param.keyLength,
+            param.objSize, readCount, 5.0);
+    writeRandomObjects(writeDist, driver, generator, numObjects, param.keyLength,
+            param.objSize, writeCount, 5.0);
     if (generator != NULL) {
       delete generator;
     }
 }
 
-void printTimeDist(const char *operation, TimeDist dists[], const char *ids[], 
-                  int n, int keyLength)
+void printTimeDist(const char *operation, TimeDist *dists, WorkloadParameter *params, 
+                  int nparams)
 {
     char name[50], description[50];
     // Print out the results (in a different order):
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < nparams; i++) {
+        const char *id = params[i].id;
         TimeDist* dist = &dists[i];
         snprintf(description, sizeof(description),
-                "%s random %sB object (%uB key)", operation, ids[i], keyLength);
-        snprintf(name, sizeof(name), "basic.%s%s", operation, ids[i]);
+                "%s random %sB object (%uB key)", operation, id, params[i].keyLength);
+        snprintf(name, sizeof(name), "basic.%s%s", operation, id);
         printf("%-20s %s     %s median\n", name, formatTime(dist->p50).c_str(),
                 description);
-        snprintf(name, sizeof(name), "basic.%s%s.min", operation, ids[i]);
+        snprintf(name, sizeof(name), "basic.%s%s.min", operation, id);
         printf("%-20s %s     %s minimum\n", name, formatTime(dist->min).c_str(),
                 description);
-        snprintf(name, sizeof(name), "basic.%s%s.9", operation, ids[i]);
+        snprintf(name, sizeof(name), "basic.%s%s.9", operation, id);
         printf("%-20s %s     %s 90%%\n", name, formatTime(dist->p90).c_str(),
                 description);
         if (dist->p99 != 0) {
-            snprintf(name, sizeof(name), "basic.%s%s.99", operation, ids[i]);
+            snprintf(name, sizeof(name), "basic.%s%s.99", operation, id);
             printf("%-20s %s     %s 99%%\n", name,
                     formatTime(dist->p99).c_str(), description);
         }
         if (dist->p999 != 0) {
-            snprintf(name, sizeof(name), "basic.%s%s.999", operation, ids[i]);
+            snprintf(name, sizeof(name), "basic.%s%s.999", operation, id);
             printf("%-20s %s     %s 99.9%%\n", name,
                     formatTime(dist->p999).c_str(), description);
         }
-        snprintf(name, sizeof(name), "basic.%sBw%s", operation, ids[i]);
+        snprintf(name, sizeof(name), "basic.%sBw%s", operation, id);
         snprintf(description, sizeof(description),
-                "bandwidth %s %sB objects (%uB key)", operation, ids[i], keyLength);
+                "bandwidth %s %sB objects (%uB key)", operation, id, params[i].keyLength);
         printBandwidth(name, dist->bandwidth, description);
     }
 }
 
-void uniformRandomRW(BenchDriverBase *driver, const char *traceFile)
+void uniformRandomRW(BenchDriverBase *driver, WorkloadParameter *params, 
+                    int nparams, const char *traceFile)
 {
-    uint16_t keyLength = 30;
-    uint32_t dataSize = 200000000;
-    uint32_t operations = 10000;
-    double readPercent = 0.5;
-    double writePercent = 0.5;
-
-#define NUM_SIZES 5
-    int sizes[] = {100, 1000, 10000, 100000, 1000000};
-    TimeDist readDists[NUM_SIZES], writeDists[NUM_SIZES];
-    const char* ids[] = {"100", "1K", "10K", "100K", "1M"};
+    TimeDist *readDists = new TimeDist[nparams];
+    TimeDist *writeDists = new TimeDist[nparams];
 
     // Each iteration through the following loop measures random reads and
     // writes of a particular object size. Start with the largest object
     // size and work down to the smallest (this way, each iteration will
     // replace all of the objects created by the previous iteration).
-    for (int i = NUM_SIZES - 1; i >= 0; --i) {
-      _randomRW(driver, traceFile, false, sizes[i], keyLength, dataSize,
-                operations, readPercent, writePercent, 
-                &readDists[i], &writeDists[i]);
+    for (int i = nparams - 1; i >= 0; --i) {
+      _randomRW(driver, traceFile, false, params[i], &readDists[i], &writeDists[i]);
     }
-    printTimeDist("read", readDists, ids, NUM_SIZES, keyLength);
-    printTimeDist("write", writeDists, ids, NUM_SIZES, keyLength);
+    printTimeDist("read", readDists, params, nparams);
+    printTimeDist("write", writeDists, params, nparams);
+    delete []readDists;
+    delete []writeDists;
 }
 
-void zipfRandomRW(BenchDriverBase *driver, const char *traceFile)
+void zipfRandomRW(BenchDriverBase *driver, WorkloadParameter *params, 
+                    int nparams, const char *traceFile)
 {
-    uint16_t keyLength = 30;
-    uint32_t dataSize = 200000000;
-    uint32_t operations = 10000;
-    double readPercent = 0.5;
-    double writePercent = 0.5;
-
-#define NUM_SIZES 5
-    int sizes[] = {100, 1000, 10000, 100000, 1000000};
-    TimeDist readDists[NUM_SIZES], writeDists[NUM_SIZES];
-    const char* ids[] = {"100", "1K", "10K", "100K", "1M"};
-
+    TimeDist *readDists = new TimeDist[nparams];
+    TimeDist *writeDists = new TimeDist[nparams];
     // Each iteration through the following loop measures random reads and
     // writes of a particular object size. Start with the largest object
     // size and work down to the smallest (this way, each iteration will
     // replace all of the objects created by the previous iteration).
-    for (int i = NUM_SIZES - 1; i >= 0; --i) {
-      _randomRW(driver, traceFile, true, sizes[i], keyLength, dataSize,
-                operations, readPercent, writePercent, 
-                &readDists[i], &writeDists[i]);
+    for (int i = nparams - 1; i >= 0; --i) {
+      _randomRW(driver, traceFile, true, params[i], &readDists[i], &writeDists[i]);
     }
-    printTimeDist("read", readDists, ids, NUM_SIZES, keyLength);
-    printTimeDist("write", writeDists, ids, NUM_SIZES, keyLength);
-}
-
-void readIntensive(BenchDriverBase *driver, const char *traceFile)
-{
-
-}
-
-void writeOnly(BenchDriverBase *driver, const char *traceFile)
-{
-
-
+    printTimeDist("read", readDists, params, nparams);
+    printTimeDist("write", writeDists, params, nparams);
+    delete []readDists;
+    delete []writeDists;
 }
 
 // From RAMCloud
@@ -611,6 +669,20 @@ std::string formatTime(double seconds)
     }
 }
 
+char* humanReadBytes(double bytes, char readable[], int maxlen)
+{
+  if (bytes > GB) {
+    snprintf(readable, maxlen, "%.1f GB", bytes / GB);
+  } else if (bytes > MB) {
+    snprintf(readable, maxlen, "%.1f MB", bytes / MB);
+  } else if (bytes > KB) {
+    snprintf(readable, maxlen, "%.1f KB", bytes / KB);
+  } else {
+    snprintf(readable, maxlen, "%.1f B", bytes);
+  }
+  return readable;
+}
+
 /**
  * Print a performance measurement consisting of a bandwidth.
  *
@@ -627,16 +699,13 @@ std::string formatTime(double seconds)
 void
 printBandwidth(const char* name, double bandwidth, const char* description)
 {
-    double gb = 1024.0*1024.0*1024.0;
-    double mb = 1024.0*1024.0;
-    double kb = 1024.0;
     printf("%-20s ", name);
-    if (bandwidth > gb) {
-        printf("%5.1f GB/s ", bandwidth/gb);
-    } else if (bandwidth > mb) {
-        printf("%5.1f MB/s ", bandwidth/mb);
-    } else if (bandwidth >kb) {
-        printf("%5.1f KB/s ", bandwidth/kb);
+    if (bandwidth > GB) {
+        printf("%5.1f GB/s ", bandwidth/GB);
+    } else if (bandwidth > MB) {
+        printf("%5.1f MB/s ", bandwidth/MB);
+    } else if (bandwidth >KB) {
+        printf("%5.1f KB/s ", bandwidth/KB);
     } else {
         printf("%5.1f B/s  ", bandwidth);
     }
@@ -672,7 +741,7 @@ void runBenchMarks(BenchDriverBase **drivers, int ndriver,
             BenchMark *bench = &gBenchmarks[k];
             printf("========================================================\n");
             printf("running benchmark '%s' on '%s'\n", bench->name, driver->getName());
-            bench->run(driver, traceFile);
+            bench->run(driver, bench->params, bench->nparams, traceFile);
             printf("========================================================\n");
             benchrun[k] = true;
           }

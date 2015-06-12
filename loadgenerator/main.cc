@@ -64,18 +64,21 @@ void testConfigs(const char *configfile)
   } else {
     printf("RAMCloud configurations parsed\n");
   }
+  delete rcconf;
   TachyonBenchConfig * tcconf = TachyonBenchConfig::fromINI(parser.getConfigs());
   if (tcconf == NULL) {
     fprintf(stderr, "Fail to parse Tachyon configurations\n");
   } else {
     printf("Tachyon configurations parsed\n");
   }
+  delete tcconf;
   RedisBenchConfig *rdconf = RedisBenchConfig::fromINI(parser.getConfigs());
   if (rdconf == NULL) {
     fprintf(stderr, "Fail to parse Redis configurations\n");
   } else {
     printf("Redis configurations parsed\n");
   }
+  delete rdconf;
   printf("========================================================\n");
 }
 
@@ -211,12 +214,12 @@ int main(int argc, char ** argv)
         printf("Supported targets:\n");
         i = 0;
         while (supported_targets[i] != NULL) {
-          printf("%s\n", supported_targets[i]);
+          printf("\t%s\n", supported_targets[i]);
           i++;
         }
         printf("\nSupported benchmarks:\n");
         for (i = 0; i < gNbench; i++) {
-          printf("%s\n", gBenchmarks[i].name);
+          printf("\t%s\n", gBenchmarks[i].name);
         }
         exit(0);
       case '?':
@@ -303,5 +306,7 @@ int main(int argc, char ** argv)
     benchnames[nbench++] = vit->c_str();
   }
   runBenchMarks(drivers, ndriver, benchnames, nbench, workloadFile);
+  delete []drivers;
+  delete []benchnames;
   return 0;
 }

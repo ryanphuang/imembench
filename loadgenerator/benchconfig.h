@@ -45,6 +45,10 @@ class BenchConfig : public rediscluster::ConnectionConfig {
     BenchConfig(const char *host, int port) : 
         rediscluster::ConnectionConfig(host, port) {}
 
+    virtual ~BenchConfig() 
+    {
+    }
+
     virtual BenchConfig & setHost(const char *host)
     {
       rediscluster::ConnectionConfig::setHost(host);

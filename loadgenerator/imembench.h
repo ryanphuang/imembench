@@ -98,18 +98,22 @@ class YCSBTraceParser : public TraceLogParser
     bool nextLog(TraceLog *log); 
 };
 
+typedef struct WorkloadParameter {
+  uint16_t keyLength;  
+  uint32_t objSize;
+  uint32_t dataSize; 
+  uint32_t operations;
+  double readPercent;
+  double writePercent;
+  const char *id;
+} WorkloadParameter;
+
 // represents each type of benchmark
 struct BenchMark {
   const char *name;
-  void (*run)(BenchDriverBase *driver, const char *traceFile);
-};
-
-struct WorkloadParameters {
- uint16_t keyLength;  
- uint32_t dataSize; 
- uint32_t operations;
- double readPercent;
- double writePercent;
+  void (*run)(BenchDriverBase *driver, WorkloadParameter *params, int nparams, const char *traceFile);
+  int nparams;
+  WorkloadParameter *params; 
 };
 
 extern BenchMark gBenchmarks[];
