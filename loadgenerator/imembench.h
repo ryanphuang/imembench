@@ -104,6 +104,14 @@ struct BenchMark {
   void (*run)(BenchDriverBase *driver, const char *traceFile);
 };
 
+struct WorkloadParameters {
+ uint16_t keyLength;  
+ uint32_t dataSize; 
+ uint32_t operations;
+ double readPercent;
+ double writePercent;
+};
+
 extern BenchMark gBenchmarks[];
 extern int gNbench;
 

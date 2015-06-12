@@ -33,7 +33,9 @@ struct TimeDist {
                                   // if no such measurement.
 };
 
-void randomRW(BenchDriverBase *driver, const char *traceFile);
+void uniformRandomRW(BenchDriverBase *driver, const char *traceFile);
+void zipfRandomRW(BenchDriverBase *driver, const char *traceFile);
+
 void ycsbReplay(BenchDriverBase *driver, const char *traceFile);
 void readIntensive(BenchDriverBase *driver, const char *traceFile);
 void writeOnly(BenchDriverBase *driver, const char *traceFile);
@@ -44,12 +46,13 @@ void printBandwidth(const char* name, double bandwidth, const char* description)
 
 BenchMark gBenchmarks[] = {
   {"ycsbReplay", ycsbReplay},
-  {"randomRW", randomRW},
+  {"randomRW", uniformRandomRW},
+  {"zipfRandomRW", zipfRandomRW},
   {"readIntensive", readIntensive},
   {"writeOnly", writeOnly},
 };
 
-int gNbench = sizeof(gBenchmarks) / sizeof(gBenchmarks[0]);
+int gNbench = 5;
 
 bool YCSBTraceParser::nextLog(TraceLog *log)
 {
@@ -105,6 +108,72 @@ bool YCSBTraceParser::nextLog(TraceLog *log)
   }
 }
 
+/**
+ * Used to generate zipfian distributed random numbers where the distribution is
+ * skewed toward the lower integers; e.g. 0 will be the most popular, 1 the next
+ * most popular, etc.
+ *
+ * This class implements the core algorithm from YCSB's ZipfianGenerator; it, in
+ * turn, uses the algorithm from "Quickly Generating Billion-Record Synthetic
+ * Databases", Jim Gray et al, SIGMOD 1994.
+ */
+class ZipfianGenerator {
+  public:
+    /**
+     * Construct a generator.  This may be expensive if n is large.
+     *
+     * \param n
+     *      The generator will output random numbers between 0 and n-1.
+     * \param theta
+     *      The zipfian parameter where 0 < theta < 1 defines the skew; the
+     *      smaller the value the more skewed the distribution will be. Default
+     *      value of 0.99 comes from the YCSB default value.
+     */
+    explicit ZipfianGenerator(uint64_t n, double theta = 0.99)
+        : n(n)
+        , theta(theta)
+        , alpha(1 / (1 - theta))
+        , zetan(zeta(n, theta))
+        , eta((1 - pow(2.0 / static_cast<double>(n), 1 - theta)) /
+              (1 - zeta(2, theta) / zetan))
+    {}
+
+    /**
+     * Return the zipfian distributed random number between 0 and n-1.
+     */
+    uint64_t nextNumber()
+    {
+        double u = static_cast<double>(generateRandom()) /
+                   static_cast<double>(~0UL);
+        double uz = u * zetan;
+        if (uz < 1)
+            return 0;
+        if (uz < 1 + std::pow(0.5, theta))
+            return 1;
+        return 0 + static_cast<uint64_t>(static_cast<double>(n) *
+                                         std::pow(eta*u - eta + 1.0, alpha));
+    }
+
+  private:
+    const uint64_t n;       // Range of numbers to be generated.
+    const double theta;     // Parameter of the zipfian distribution.
+    const double alpha;     // Special intermediate result used for generation.
+    const double zetan;     // Special intermediate result used for generation.
+    const double eta;       // Special intermediate result used for generation.
+
+    /**
+     * Returns the nth harmonic number with parameter theta; e.g. H_{n,theta}.
+     */
+    static double zeta(uint64_t n, double theta)
+    {
+        double sum = 0;
+        for (uint64_t i = 0; i < n; i++) {
+            sum = sum + 1.0/(std::pow(i+1, theta));
+        }
+        return sum;
+    }
+};
+
 void fillData(BenchDriverBase *driver, int numObjects, uint16_t keyLength, uint32_t valueLength)
 {
     char value[valueLength];
@@ -150,8 +219,9 @@ void fillData(BenchDriverBase *driver, int numObjects, uint16_t keyLength, uint3
  *      Information about how long the reads took.
  */
 TimeDist
-readRandomObjects(BenchDriverBase *driver, uint32_t numObjects, uint16_t keyLength, 
-          uint32_t maxValueLength, int count, double timeLimit)
+readRandomObjects(BenchDriverBase *driver, ZipfianGenerator *generator, 
+          uint32_t numObjects, uint16_t keyLength, uint32_t maxValueLength, 
+          int count, double timeLimit)
 {
     uint64_t total = 0;
     std::vector<uint64_t> times(count);
@@ -166,8 +236,13 @@ readRandomObjects(BenchDriverBase *driver, uint32_t numObjects, uint16_t keyLeng
             break;
         }
 
+        int ri; 
+        if (generator == NULL) {
+          ri = RAMCloud::downCast<int>(generateRandom()%numObjects);
+        } else {
+          ri = RAMCloud::downCast<int>(generator->nextNumber());
+        }
         std::stringstream ss;
-        int ri = RAMCloud::downCast<int>(generateRandom() % numObjects);
         ss << ri;
         std::string key = ss.str();
         int rd = driver->read(key.c_str(), (uint32_t) key.length(), value, maxValueLength);
@@ -210,7 +285,8 @@ readRandomObjects(BenchDriverBase *driver, uint32_t numObjects, uint16_t keyLeng
  *      Information about how long the writes took.
  */
 TimeDist
-writeRandomObjects(BenchDriverBase *driver, uint32_t numObjects, uint16_t keyLength,
+writeRandomObjects(BenchDriverBase *driver, ZipfianGenerator *generator,
+          uint32_t numObjects, uint16_t keyLength,
           uint32_t valueLength, int count, double timeLimit)
 {
     uint64_t total = 0;
@@ -220,7 +296,12 @@ writeRandomObjects(BenchDriverBase *driver, uint32_t numObjects, uint16_t keyLen
     uint64_t stopTime = RAMCloud::Cycles::rdtsc() + RAMCloud::Cycles::fromSeconds(timeLimit);
 
     for (int i = 0; i < count; i++) {
-        int ri = RAMCloud::downCast<int>(generateRandom()%numObjects);
+        int ri;
+        if (generator == NULL) {
+          ri = RAMCloud::downCast<int>(generateRandom()%numObjects);
+        } else {
+          ri = RAMCloud::downCast<int>(generator->nextNumber());
+        }
         std::stringstream ss;
         ss << ri;
         std::string key = ss.str();
@@ -324,96 +405,120 @@ void ycsbReplay(BenchDriverBase *driver, const char *traceFile)
   printBandwidth(name, dist.bandwidth, "bandwidth");
 }
 
-
 // Modified from RAMCloud
 //
-void randomRW(BenchDriverBase *driver, const char *traceFile)
+void _randomRW(BenchDriverBase *driver, const char *traceFile, bool zipfRandom, 
+              uint32_t objSize, uint16_t keySize, uint32_t dataSize, 
+              uint32_t operations, double readPercent, double writePercent, 
+              TimeDist *readDist, TimeDist *writeDist)
 {
+
+    int readCount = (int) (operations * readPercent);
+    int writeCount = (int) (operations * writePercent);
+
+    // The "20" below accounts for additional overhead per object beyond the
+    // key and value.
+    uint32_t numObjects = dataSize / (objSize + keySize + 20);
+
+    ZipfianGenerator *generator = NULL;
+    if (zipfRandom) {
+      generator = new ZipfianGenerator(numObjects);
+    }
+    fillData(driver, numObjects, keySize, objSize);
+    *readDist = readRandomObjects(driver, generator, numObjects, keySize,
+            objSize, readCount, 5.0);
+    *writeDist =  writeRandomObjects(driver, generator, numObjects, keySize,
+            objSize, writeCount, 5.0);
+    if (generator != NULL) {
+      delete generator;
+    }
+}
+
+void printTimeDist(const char *operation, TimeDist dists[], const char *ids[], 
+                  int n, int keyLength)
+{
+    char name[50], description[50];
+    // Print out the results (in a different order):
+    for (int i = 0; i < n; i++) {
+        TimeDist* dist = &dists[i];
+        snprintf(description, sizeof(description),
+                "%s random %sB object (%uB key)", operation, ids[i], keyLength);
+        snprintf(name, sizeof(name), "basic.%s%s", operation, ids[i]);
+        printf("%-20s %s     %s median\n", name, formatTime(dist->p50).c_str(),
+                description);
+        snprintf(name, sizeof(name), "basic.%s%s.min", operation, ids[i]);
+        printf("%-20s %s     %s minimum\n", name, formatTime(dist->min).c_str(),
+                description);
+        snprintf(name, sizeof(name), "basic.%s%s.9", operation, ids[i]);
+        printf("%-20s %s     %s 90%%\n", name, formatTime(dist->p90).c_str(),
+                description);
+        if (dist->p99 != 0) {
+            snprintf(name, sizeof(name), "basic.%s%s.99", operation, ids[i]);
+            printf("%-20s %s     %s 99%%\n", name,
+                    formatTime(dist->p99).c_str(), description);
+        }
+        if (dist->p999 != 0) {
+            snprintf(name, sizeof(name), "basic.%s%s.999", operation, ids[i]);
+            printf("%-20s %s     %s 99.9%%\n", name,
+                    formatTime(dist->p999).c_str(), description);
+        }
+        snprintf(name, sizeof(name), "basic.%sBw%s", operation, ids[i]);
+        snprintf(description, sizeof(description),
+                "bandwidth %s %sB objects (%uB key)", operation, ids[i], keyLength);
+        printBandwidth(name, dist->bandwidth, description);
+    }
+}
+
+void uniformRandomRW(BenchDriverBase *driver, const char *traceFile)
+{
+    uint16_t keyLength = 30;
+    uint32_t dataSize = 200000000;
+    uint32_t operations = 10000;
+    double readPercent = 0.5;
+    double writePercent = 0.5;
+
 #define NUM_SIZES 5
     int sizes[] = {100, 1000, 10000, 100000, 1000000};
-    // int sizes[] = {1000000};
     TimeDist readDists[NUM_SIZES], writeDists[NUM_SIZES];
     const char* ids[] = {"100", "1K", "10K", "100K", "1M"};
-    // const char* ids[] = {"1M"};
-    uint16_t keyLength = 30;
-    char name[50], description[50];
 
     // Each iteration through the following loop measures random reads and
     // writes of a particular object size. Start with the largest object
     // size and work down to the smallest (this way, each iteration will
     // replace all of the objects created by the previous iteration).
-    for (int i = NUM_SIZES-1; i >= 0; i--) {
-        int size = sizes[i];
-
-        // Generate roughly 500MB of data of the current size. The "20"
-        // below accounts for additional overhead per object beyond the
-        // key and value.
-        uint32_t numObjects = 200000000/(size + keyLength + 20);
-        fillData(driver, numObjects, keyLength, size);
-        readDists[i] = readRandomObjects(driver, numObjects, keyLength,
-                size, 10000, 5.0);
-        writeDists[i] =  writeRandomObjects(driver, numObjects, keyLength,
-                size, 10000, 5.0);
+    for (int i = NUM_SIZES - 1; i >= 0; --i) {
+      _randomRW(driver, traceFile, false, sizes[i], keyLength, dataSize,
+                operations, readPercent, writePercent, 
+                &readDists[i], &writeDists[i]);
     }
+    printTimeDist("read", readDists, ids, NUM_SIZES, keyLength);
+    printTimeDist("write", writeDists, ids, NUM_SIZES, keyLength);
+}
 
-    // Print out the results (in a different order):
-    for (int i = 0; i < NUM_SIZES; i++) {
-        TimeDist* dist = &readDists[i];
-        snprintf(description, sizeof(description),
-                "read random %sB object (%uB key)", ids[i], keyLength);
-        snprintf(name, sizeof(name), "basic.read%s", ids[i]);
-        printf("%-20s %s     %s median\n", name, formatTime(dist->p50).c_str(),
-                description);
-        snprintf(name, sizeof(name), "basic.read%s.min", ids[i]);
-        printf("%-20s %s     %s minimum\n", name, formatTime(dist->min).c_str(),
-                description);
-        snprintf(name, sizeof(name), "basic.read%s.9", ids[i]);
-        printf("%-20s %s     %s 90%%\n", name, formatTime(dist->p90).c_str(),
-                description);
-        if (dist->p99 != 0) {
-            snprintf(name, sizeof(name), "basic.read%s.99", ids[i]);
-            printf("%-20s %s     %s 99%%\n", name,
-                    formatTime(dist->p99).c_str(), description);
-        }
-        if (dist->p999 != 0) {
-            snprintf(name, sizeof(name), "basic.read%s.999", ids[i]);
-            printf("%-20s %s     %s 99.9%%\n", name,
-                    formatTime(dist->p999).c_str(), description);
-        }
-        snprintf(name, sizeof(name), "basic.readBw%s", ids[i]);
-        snprintf(description, sizeof(description),
-                "bandwidth reading %sB objects (%uB key)", ids[i], keyLength);
-        printBandwidth(name, dist->bandwidth, description);
-    }
+void zipfRandomRW(BenchDriverBase *driver, const char *traceFile)
+{
+    uint16_t keyLength = 30;
+    uint32_t dataSize = 200000000;
+    uint32_t operations = 10000;
+    double readPercent = 0.5;
+    double writePercent = 0.5;
 
-    for (int i = 0; i < NUM_SIZES; i++) {
-        TimeDist* dist = &writeDists[i];
-        snprintf(description, sizeof(description),
-                "write random %sB object (%uB key)", ids[i], keyLength);
-        snprintf(name, sizeof(name), "basic.write%s", ids[i]);
-        printf("%-20s %s     %s median\n", name, formatTime(dist->p50).c_str(),
-                description);
-        snprintf(name, sizeof(name), "basic.write%s.min", ids[i]);
-        printf("%-20s %s     %s minimum\n", name, formatTime(dist->min).c_str(),
-                description);
-        snprintf(name, sizeof(name), "basic.write%s.9", ids[i]);
-        printf("%-20s %s     %s 90%%\n", name, formatTime(dist->p90).c_str(),
-                description);
-        if (dist->p99 != 0) {
-            snprintf(name, sizeof(name), "basic.write%s.99", ids[i]);
-            printf("%-20s %s     %s 99%%\n", name,
-                    formatTime(dist->p99).c_str(), description);
-        }
-        if (dist->p999 != 0) {
-            snprintf(name, sizeof(name), "basic.write%s.999", ids[i]);
-            printf("%-20s %s     %s 99.9%%\n", name,
-                    formatTime(dist->p999).c_str(), description);
-        }
-        snprintf(name, sizeof(name), "basic.writeBw%s", ids[i]);
-        snprintf(description, sizeof(description),
-                "bandwidth writing %sB objects (%uB key)", ids[i], keyLength);
-        printBandwidth(name, dist->bandwidth, description);
+#define NUM_SIZES 5
+    int sizes[] = {100, 1000, 10000, 100000, 1000000};
+    TimeDist readDists[NUM_SIZES], writeDists[NUM_SIZES];
+    const char* ids[] = {"100", "1K", "10K", "100K", "1M"};
+
+    // Each iteration through the following loop measures random reads and
+    // writes of a particular object size. Start with the largest object
+    // size and work down to the smallest (this way, each iteration will
+    // replace all of the objects created by the previous iteration).
+    for (int i = NUM_SIZES - 1; i >= 0; --i) {
+      _randomRW(driver, traceFile, true, sizes[i], keyLength, dataSize,
+                operations, readPercent, writePercent, 
+                &readDists[i], &writeDists[i]);
     }
+    printTimeDist("read", readDists, ids, NUM_SIZES, keyLength);
+    printTimeDist("write", writeDists, ids, NUM_SIZES, keyLength);
 }
 
 void readIntensive(BenchDriverBase *driver, const char *traceFile)
