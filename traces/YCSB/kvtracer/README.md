@@ -4,11 +4,29 @@ Dummy YCSB client to record all the workload operations in a trace file, and con
 them to simple key-value GET/PUT operation to be used by some other benchmark tools.
 
 ## Usage
-To compile, put the `kvtracer` directory in `YCSB` source directory and then
-`mvn -pl kvtracer -am clean package`. The jar file should be generated in
+To compile the kvtracer module ,
+* Put the `kvtracer` directory in `YCSB` source directory
+* Modify the `pom.xml` file in the root directory of `YCSB` to include `kvtracer`
+  (refer to https://github.com/stormspirit/YCSB), e.g.,
+
+  ```
+   <properties>
+      ...
+      <redis.version>2.0.0</redis.version>
++     <kvtracer.version>0.1.0</kvtracer.version>
+      ...
+   </properties>
+   <modules>
+      ...
+      <module>redis</module>
++     <module>kvtracer</module>
+      ...
+   </modules>
+  ```
+* Compile with `mvn -pl kvtracer -am clean package`. The jar file should be generated in
 the `target` directory in `kvtracer`.
 
-Then to generate the workload trace, run
+To generate the workload trace, run
 ```
 bin/ycsb load kvtracer -P workloads/workloada -p "kvtracer.tracefile=tracea_load.txt" -p "kvtracer.keymapfile=tracea_keys.txt"
 ```
